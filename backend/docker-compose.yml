@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+      - /app/vendor
+    environment:
+      - GIN_MODE=debug
+      - PORT=8080
+    restart: unless-stopped
+    networks:
+      - finance-network
+
+networks:
+  finance-network:
+    driver: bridge
