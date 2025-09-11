@@ -16,11 +16,8 @@ RUN go mod download
 # Copy source code
 COPY . .
 
-# Clean vendor directory if it exists and rebuild
-RUN rm -rf vendor && go mod vendor
-
 # Build the application
-RUN go build -o main ./cmd/api
+RUN go build -mod=mod -o main ./cmd/api
 
 # Development stage
 FROM golang:1.25-alpine AS development
@@ -40,14 +37,11 @@ RUN go mod download
 # Copy source code
 COPY . .
 
-# Clean vendor directory if it exists and rebuild
-RUN rm -rf vendor && go mod vendor
-
 # Expose port
 EXPOSE 8080
 
 # Use air for hot reload
-CMD ["air", "--build.cmd", "go build -o ./tmp/main ./cmd/api", "--build.bin", "./tmp/main"]
+CMD ["air", "--build.cmd", "go build -mod=mod -o ./tmp/main ./cmd/api", "--build.bin", "./tmp/main"]
 
 # Production stage
 FROM alpine:latest AS production
