@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Woo App",
-  description: "A modern web application built with Next.js",
+  title: "Finance Manager",
+  description: "Personal finance management application",
 };
 
 export default function RootLayout({
