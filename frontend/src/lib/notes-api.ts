@@ -1,7 +1,7 @@
-import { Note, CreateNoteRequest, UpdateNoteRequest, NotesResponse, SearchNotesParams, NoteCategory } from '@/types/notes';
+import type { Note, CreateNoteRequest, UpdateNoteRequest, NotesResponse, SearchNotesParams, NoteCategory } from '@/types/notes';
 import { stripHtmlTags } from './utils';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+// const API_BASE_URL = process.env['NEXT_PUBLIC_API_URL'] || 'http://localhost:8080';
 
 // Mock data for development - will be replaced with actual API calls
 const mockNotes: Note[] = [
@@ -116,10 +116,11 @@ export const notesApi = {
     }
     
     const updatedNote: Note = {
-      ...mockNotes[noteIndex],
+      id: mockNotes[noteIndex]!.id,
       title: noteData.title,
       content: noteData.content,
       category: noteData.category,
+      createdAt: mockNotes[noteIndex]!.createdAt,
       updatedAt: new Date().toISOString(),
     };
     
