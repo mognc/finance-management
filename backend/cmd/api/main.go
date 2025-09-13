@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"finance-management/internal/config"
 	"finance-management/internal/handlers"
 
 	"github.com/gin-gonic/gin"
@@ -14,6 +15,12 @@ func main() {
 	if os.Getenv("GIN_MODE") == "" {
 		gin.SetMode(gin.DebugMode)
 	}
+
+	// Initialize database connection
+	if err := config.InitDatabase(); err != nil {
+		log.Fatal("Failed to initialize database:", err)
+	}
+	defer config.CloseDatabase()
 
 	// Create Gin router
 	r := gin.Default()
