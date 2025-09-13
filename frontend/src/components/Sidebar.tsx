@@ -6,8 +6,7 @@ import {
   HomeIcon,
   CogIcon,
   UserIcon,
-  DocumentTextIcon,
-  XMarkIcon
+  DocumentTextIcon
 } from '@heroicons/react/24/outline';
 import { useSidebar } from '@/contexts/SidebarContext';
 
@@ -19,7 +18,7 @@ const navigation = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { isOpen, closeSidebar } = useSidebar();
+  const { isOpen } = useSidebar();
 
   return (
     <>
@@ -30,16 +29,9 @@ export default function Sidebar() {
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         w-64
       `}>
-        {/* Header with close button */}
-        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-700 dark:border-gray-600">
+        {/* Header */}
+        <div className="flex items-center h-16 px-6 border-b border-gray-700 dark:border-gray-600">
           <h1 className="text-xl font-bold">Finance Manager</h1>
-          <button
-            onClick={closeSidebar}
-            className="p-1 rounded-md hover:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
-            title="Close sidebar"
-          >
-            <XMarkIcon className="w-6 h-6" />
-          </button>
         </div>
 
       {/* Navigation */}
