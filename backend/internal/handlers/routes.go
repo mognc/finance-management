@@ -13,8 +13,10 @@ func SetupRoutes(r *gin.Engine) {
 	api := r.Group("/api/v1")
 	{
 		api.GET("/health", healthHandler.Health)
+		api.GET("/health/db", healthHandler.DatabaseHealth)
 	}
 
 	// Root health check
 	r.GET("/health", healthHandler.Health)
+	r.GET("/health/db", healthHandler.DatabaseHealth)
 }

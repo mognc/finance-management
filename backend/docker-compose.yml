@@ -1,6 +1,28 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: finance-postgres
+    environment:
+      POSTGRES_DB: finance_management
+      POSTGRES_USER: finance_user
+      POSTGRES_PASSWORD: finance_password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    networks:
+      - finance-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finance_user -d finance_management"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: .
@@ -14,9 +36,21 @@ services:
     environment:
       - GIN_MODE=debug
       - PORT=8080
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=finance_management
+      - DB_USER=finance_user
+      - DB_PASSWORD=finance_password
+      - DB_SSLMODE=disable
     restart: unless-stopped
     networks:
       - finance-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
 
 networks:
   finance-network:
