@@ -3,9 +3,6 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: #0f172a;
@@ -25,28 +22,109 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --color-primary: #f8fafc;
-    --color-primary-foreground: #0f172a;
-    --color-secondary: #1e293b;
-    --color-secondary-foreground: #f8fafc;
-    --color-muted: #1e293b;
-    --color-muted-foreground: #94a3b8;
-    --color-accent: #1e293b;
-    --color-accent-foreground: #f8fafc;
-    --color-destructive: #ef4444;
-    --color-destructive-foreground: #f8fafc;
-    --color-border: #334155;
-    --color-input: #334155;
-    --color-ring: #f8fafc;
-  }
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --color-primary: #f8fafc;
+  --color-primary-foreground: #0f172a;
+  --color-secondary: #1e293b;
+  --color-secondary-foreground: #f8fafc;
+  --color-muted: #1e293b;
+  --color-muted-foreground: #94a3b8;
+  --color-accent: #1e293b;
+  --color-accent-foreground: #f8fafc;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #f8fafc;
+  --color-border: #334155;
+  --color-input: #334155;
+  --color-ring: #f8fafc;
+}
+
+/* Override Tailwind's default colors with our CSS variables */
+.bg-white {
+  background-color: var(--background) !important;
+}
+
+.dark .bg-gray-800 {
+  background-color: var(--background) !important;
+}
+
+.text-gray-900 {
+  color: var(--foreground) !important;
+}
+
+.dark .text-white {
+  color: var(--foreground) !important;
+}
+
+.text-gray-600 {
+  color: var(--color-muted-foreground) !important;
+}
+
+.dark .text-gray-400 {
+  color: var(--color-muted-foreground) !important;
+}
+
+.text-gray-500 {
+  color: var(--color-muted-foreground) !important;
+}
+
+.border-gray-200 {
+  border-color: var(--color-border) !important;
+}
+
+.dark .border-gray-700 {
+  border-color: var(--color-border) !important;
+}
+
+.divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--color-border) !important;
+}
+
+.dark .divide-gray-700 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--color-border) !important;
+}
+
+.bg-gray-100 {
+  background-color: var(--color-secondary) !important;
+}
+
+.dark .bg-gray-700 {
+  background-color: var(--color-secondary) !important;
+}
+
+.text-gray-700 {
+  color: var(--color-secondary-foreground) !important;
+}
+
+.dark .text-gray-300 {
+  color: var(--color-secondary-foreground) !important;
+}
+
+.hover\:bg-gray-200:hover {
+  background-color: var(--color-accent) !important;
+}
+
+.dark .hover\:bg-gray-600:hover {
+  background-color: var(--color-accent) !important;
+}
+
+.bg-gray-100 {
+  background-color: var(--color-muted) !important;
+}
+
+.dark .bg-gray-900 {
+  background-color: var(--background) !important;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Ensure smooth transitions for all elements */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }

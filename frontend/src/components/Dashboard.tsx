@@ -51,21 +51,21 @@ export default function Dashboard() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">Welcome back! Here's your financial overview.</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">Welcome back! Here's your financial overview.</p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
-          <div key={stat.name} className="bg-white rounded-lg shadow p-6">
+          <div key={stat.name} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <stat.icon className="h-8 w-8 text-blue-600" />
               </div>
               <div className="ml-4 flex-1">
-                <p className="text-sm font-medium text-gray-500">{stat.name}</p>
-                <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{stat.name}</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stat.value}</p>
                 <p className={`text-sm ${
                   stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
                 }`}>
@@ -78,11 +78,11 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Transactions */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Transactions</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Transactions</h2>
         </div>
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-gray-200 dark:divide-gray-700">
           {recentTransactions.map((transaction) => (
             <div key={transaction.id} className="px-6 py-4 flex items-center justify-between">
               <div className="flex items-center">
@@ -90,8 +90,8 @@ export default function Dashboard() {
                   transaction.type === 'income' ? 'bg-green-500' : 'bg-red-500'
                 }`} />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{transaction.description}</p>
-                  <p className="text-sm text-gray-500">{transaction.date}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{transaction.description}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{transaction.date}</p>
                 </div>
               </div>
               <p className={`text-sm font-medium ${
@@ -111,53 +111,53 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
           <div className="space-y-3">
             <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
               Add Transaction
             </button>
-            <button className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors">
+            <button className="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 px-4 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
               Set Budget
             </button>
-            <button className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors">
+            <button className="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 px-4 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
               View Reports
             </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Summary</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Monthly Summary</h3>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-gray-600">Income</span>
+              <span className="text-gray-600 dark:text-gray-400">Income</span>
               <span className="font-medium text-green-600">$4,500.00</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Expenses</span>
+              <span className="text-gray-600 dark:text-gray-400">Expenses</span>
               <span className="font-medium text-red-600">$3,200.45</span>
             </div>
-            <div className="flex justify-between border-t pt-3">
-              <span className="font-medium">Net</span>
+            <div className="flex justify-between border-t border-gray-200 dark:border-gray-700 pt-3">
+              <span className="font-medium text-gray-900 dark:text-white">Net</span>
               <span className="font-bold text-blue-600">$1,299.55</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Bills</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Upcoming Bills</h3>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-gray-600">Rent</span>
-              <span className="font-medium">$1,200.00</span>
+              <span className="text-gray-600 dark:text-gray-400">Rent</span>
+              <span className="font-medium text-gray-900 dark:text-white">$1,200.00</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Electricity</span>
-              <span className="font-medium">$85.50</span>
+              <span className="text-gray-600 dark:text-gray-400">Electricity</span>
+              <span className="font-medium text-gray-900 dark:text-white">$85.50</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Internet</span>
-              <span className="font-medium">$65.00</span>
+              <span className="text-gray-600 dark:text-gray-400">Internet</span>
+              <span className="font-medium text-gray-900 dark:text-white">$65.00</span>
             </div>
           </div>
         </div>
