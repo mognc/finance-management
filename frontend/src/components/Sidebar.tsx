@@ -3,10 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
-  HomeIcon, 
-  ChartBarIcon, 
-  CreditCardIcon, 
-  BanknotesIcon,
+  HomeIcon,
   CogIcon,
   UserIcon,
   DocumentTextIcon,
@@ -16,12 +13,8 @@ import { useSidebar } from '@/contexts/SidebarContext';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
-  { name: 'Transactions', href: '/transactions', icon: CreditCardIcon },
-  { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
-  { name: 'Budget', href: '/budget', icon: BanknotesIcon },
   { name: 'Notes', href: '/notes', icon: DocumentTextIcon },
-  { name: 'Profile', href: '/profile', icon: UserIcon },
-  { name: 'Settings', href: '/settings', icon: CogIcon },
+  { name: 'Settings', href: '/settings', icon: CogIcon }
 ];
 
 export default function Sidebar() {
