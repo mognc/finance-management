@@ -45,3 +45,6 @@ export interface ComponentWithChildren {
 export interface ComponentWithClassName {
   className?: string;
 }
+
+// Re-export notes types
+export * from './notes';

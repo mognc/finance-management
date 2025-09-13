@@ -1,4 +1,4 @@
-import Sidebar from '@/components/Sidebar';
+import MainLayout from '@/components/MainLayout';
 
 export default function SettingsLayout({
   children,
@@ -6,11 +6,8 @@ export default function SettingsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto">
-        {children}
-      </main>
-    </div>
+    <MainLayout>
+      {children}
+    </MainLayout>
   );
 }
