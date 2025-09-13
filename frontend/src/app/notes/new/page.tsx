@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import {  BookmarkIcon } from '@heroicons/react/24/outline';
 import TiptapEditor from '@/components/TiptapEditor';
 import { notesApi } from '@/lib/notes-api';
-import { NoteCategory } from '@/types/notes';
+import type { NoteCategory } from '@/types/notes';
 import MainLayout from '@/components/MainLayout';
 import BackButton from '@/components/BackButton';
 

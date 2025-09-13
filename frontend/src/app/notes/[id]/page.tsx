@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeftIcon, BookmarkIcon, TrashIcon } from '@heroicons/react/24/outline';
-import Link from 'next/link';
+import { BookmarkIcon, TrashIcon } from '@heroicons/react/24/outline';
 import TiptapEditor from '@/components/TiptapEditor';
 import { notesApi } from '@/lib/notes-api';
-import { Note, NoteCategory } from '@/types/notes';
+import type { Note, NoteCategory } from '@/types/notes';
 import MainLayout from '@/components/MainLayout';
 import BackButton from '@/components/BackButton';
 
@@ -21,7 +20,7 @@ const categories = [
 export default function NoteEditorPage() {
   const router = useRouter();
   const params = useParams();
-  const noteId = params.id as string;
+  const noteId = params['id'] as string;
 
   const [note, setNote] = useState<Note | null>(null);
   const [title, setTitle] = useState('');

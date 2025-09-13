@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { PlusIcon, MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
 import { notesApi } from '@/lib/notes-api';
-import { Note, NoteCategory } from '@/types/notes';
+import type { Note, NoteCategory } from '@/types/notes';
 import { getContentPreview } from '@/lib/utils';
 import MainLayout from '@/components/MainLayout';
 
@@ -30,8 +30,8 @@ export default function NotesPage() {
       try {
         setIsLoading(true);
         const response = await notesApi.getNotes({
-          query: searchTerm || undefined,
-          category: selectedCategory === 'all' ? undefined : selectedCategory as NoteCategory,
+          ...(searchTerm && { query: searchTerm }),
+          ...(selectedCategory !== 'all' && { category: selectedCategory as NoteCategory }),
         });
         setNotes(response.notes);
       } catch (error) {
