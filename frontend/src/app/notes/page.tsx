@@ -3,19 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { PlusIcon, MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
-import { notesApi } from '@/lib/notes-api';
+import { notesApi } from '@/lib/api/notes';
 import type { Note, NoteCategory } from '@/types/notes';
-import { getContentPreview } from '@/lib/utils';
-import MainLayout from '@/components/MainLayout';
-
-const categories = [
-  { id: 'all', name: 'All Notes' },
-  { id: 'bullet-points', name: 'Bullet Points' },
-  { id: 'plans', name: 'Plans' },
-  { id: 'strategies', name: 'Strategies' },
-  { id: 'wishlist', name: 'Wishlist' },
-  { id: 'other', name: 'Other' },
-];
+import MainLayout from '@/components/layout/MainLayout';
+import NoteCard from '@/components/notes/NoteCard';
+import { NOTE_CATEGORIES } from '@/lib/utils';
 
 export default function NotesPage() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -44,13 +36,6 @@ export default function NotesPage() {
     loadNotes();
   }, [searchTerm, selectedCategory]);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
 
   return (
     <MainLayout>
@@ -91,7 +76,7 @@ export default function NotesPage() {
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            {categories.map(category => (
+            {NOTE_CATEGORIES.map(category => (
               <option key={category.id} value={category.id}>
                 {category.name}
               </option>
@@ -153,39 +138,10 @@ export default function NotesPage() {
             : 'grid-cols-1'
         }`}>
           {notes.map((note) => (
-            <Link
+            <NoteCard
               key={note.id}
-              href={`/notes/${note.id}`}
-              className="block p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow"
-            >
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2">
-                  {note.title}
-                </h3>
-                <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${
-                  note.category === 'bullet-points' 
-                    ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
-                    : note.category === 'plans'
-                    ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                    : note.category === 'strategies'
-                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
-                    : note.category === 'wishlist'
-                    ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-                }`}>
-                  {categories.find(cat => cat.id === note.category)?.name || 'Other'}
-                </span>
-              </div>
-              
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-3">
-                {getContentPreview(note.content)}
-              </p>
-              
-              <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
-                <span>Updated {formatDate(note.updatedAt)}</span>
-                <span>Created {formatDate(note.createdAt)}</span>
-              </div>
-            </Link>
+              note={note}
+            />
           ))}
         </div>
       )}

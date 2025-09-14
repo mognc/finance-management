@@ -20,6 +20,8 @@
   --color-ring: #0f172a;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --toast-bg: #ffffff;
+  --toast-color: #171717;
 }
 
 .dark {
@@ -38,6 +40,8 @@
   --color-border: #334155;
   --color-input: #334155;
   --color-ring: #f8fafc;
+  --toast-bg: #1f2937;
+  --toast-color: #f9fafb;
 }
 
 /* Override Tailwind's default colors with our CSS variables */
