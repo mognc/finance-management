@@ -37,14 +37,9 @@ export interface FormState {
   success?: string;
 }
 
-// Component props types
-export interface ComponentWithChildren {
-  children: React.ReactNode;
-}
-
-export interface ComponentWithClassName {
-  className?: string;
-}
-
-// Re-export notes types
+// Re-export all type modules
 export * from './notes';
+export * from './ui';
+export * from './context';
+export * from './navigation';
+export * from './components';

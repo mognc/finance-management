@@ -1,5 +1,5 @@
 import type { Note, CreateNoteRequest, UpdateNoteRequest, NotesResponse, SearchNotesParams, NoteCategory } from '@/types/notes';
-import { stripHtmlTags } from './utils';
+import { stripHtmlTags } from '../utils/index';
 
 // const API_BASE_URL = process.env['NEXT_PUBLIC_API_URL'] || 'http://localhost:8080';
 

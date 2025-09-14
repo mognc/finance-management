@@ -2,20 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { BookmarkIcon, TrashIcon } from '@heroicons/react/24/outline';
-import TiptapEditor from '@/components/TiptapEditor';
-import { notesApi } from '@/lib/notes-api';
+import { notesApi } from '@/lib/api/notes';
 import type { Note, NoteCategory } from '@/types/notes';
-import MainLayout from '@/components/MainLayout';
-import BackButton from '@/components/BackButton';
-
-const categories = [
-  { id: 'bullet-points', name: 'Bullet Points' },
-  { id: 'plans', name: 'Plans' },
-  { id: 'strategies', name: 'Strategies' },
-  { id: 'wishlist', name: 'Wishlist' },
-  { id: 'other', name: 'Other' },
-];
+import MainLayout from '@/components/layout/MainLayout';
+import NoteHeader from '@/components/notes/NoteHeader';
+import NoteForm from '@/components/notes/NoteForm';
+import { formatDateLong } from '@/lib/utils';
 
 export default function NoteEditorPage() {
   const router = useRouter();
@@ -107,15 +99,6 @@ export default function NoteEditorPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
   if (isLoading) {
     return (
@@ -134,92 +117,25 @@ export default function NoteEditorPage() {
   return (
     <MainLayout>
       <div className="p-6 max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <BackButton fallbackHref="/notes" className="mr-4" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Note</h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                {note && `Last updated ${formatDate(note.updatedAt)}`}
-              </p>
-            </div>
-          </div>
-        
-        <div className="flex items-center gap-3">
-          {hasChanges && (
-            <span className="text-sm text-orange-600 dark:text-orange-400">
-              Unsaved changes
-            </span>
-          )}
-          <button
-            onClick={handleDelete}
-            className="p-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
-            title="Delete note"
-          >
-            <TrashIcon className="w-5 h-5" />
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={isSaving || !title.trim() || !hasChanges}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-          >
-            <BookmarkIcon className="w-5 h-5 mr-2" />
-            {isSaving ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
-      </div>
+        <NoteHeader
+          isEditing={true}
+          {...(note && { lastUpdated: formatDateLong(note.updatedAt) })}
+          hasChanges={hasChanges}
+          isSaving={isSaving}
+          canSave={!!title.trim() && hasChanges}
+          onSave={handleSave}
+          onDelete={handleDelete}
+        />
 
-      {/* Note Form */}
-      <div className="space-y-6">
-        {/* Title Input */}
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Title
-          </label>
-          <input
-            type="text"
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter note title..."
-            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xl font-medium"
-          />
-        </div>
-
-        {/* Category Selection */}
-        <div>
-          <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Category
-          </label>
-          <select
-            id="category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value as NoteCategory)}
-            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            {categories.map(cat => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Content Editor */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Content
-          </label>
-          <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
-            <TiptapEditor
-              content={content}
-              onChange={setContent}
-              placeholder="Start writing your note..."
-            />
-          </div>
-        </div>
-      </div>
+        <NoteForm
+          title={title}
+          content={content}
+          category={category}
+          onTitleChange={setTitle}
+          onContentChange={setContent}
+          onCategoryChange={setCategory}
+          isEditing={true}
+        />
       </div>
     </MainLayout>
   );
