@@ -14,13 +14,13 @@ CREATE TABLE IF NOT EXISTS notes (
     category VARCHAR(100) DEFAULT 'general',
     tags TEXT[], -- Array of tags for better organization
     is_favorite BOOLEAN DEFAULT FALSE,
+    is_archived BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_notes_user_id ON notes(user_id);
-CREATE INDEX IF NOT EXISTS idx_notes_category ON notes(category);
 CREATE INDEX IF NOT EXISTS idx_notes_created_at ON notes(created_at);
 CREATE INDEX IF NOT EXISTS idx_notes_tags ON notes USING GIN(tags);
 

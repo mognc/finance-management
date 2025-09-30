@@ -50,6 +50,32 @@ docker-down:
 docker-logs:
 	docker-compose logs -f
 
+# Migration commands
+migrate:
+	go run ./cmd/migrate
+
+migrate-up:
+	make migrate
+
+# Docker migration commands
+docker-migrate:
+	./scripts/migrate-docker.sh migrate
+
+docker-migrate-status:
+	./scripts/migrate-docker.sh status
+
+docker-migrate-reset:
+	./scripts/migrate-docker.sh reset
+
+# Alternative: Local migration with Docker database
+local-migrate:
+	docker-compose up -d postgres
+	sleep 5
+	go run ./cmd/migrate
+
+# Alternative: Direct database migration
+db-migrate:
+	docker-compose exec -T postgres psql -U finance_user -d finance_management -f /docker-entrypoint-initdb.d/init.sql
 # Development commands
 dev-up:
 	docker-compose up -d postgres
