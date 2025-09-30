@@ -34,7 +34,17 @@ func (h *HealthHandler) DatabaseHealth(c *gin.Context) {
 		return
 	}
 
-	if err := db.Ping(); err != nil {
+	// With GORM, perform a lightweight query to verify connectivity
+	sqlDB, err := db.DB()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"status": "unhealthy",
+			"error":  err.Error(),
+		})
+		return
+	}
+
+	if err := sqlDB.Ping(); err != nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{
 			"status": "unhealthy",
 			"error":  err.Error(),
