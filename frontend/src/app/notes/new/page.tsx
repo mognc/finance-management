@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { notesApi } from '@/lib/api/notes';
-import type { NoteCategory } from '@/types/notes';
+import { useApi } from '@/hooks/use-api';
 import MainLayout from '@/components/layout/MainLayout';
 import NoteHeader from '@/components/notes/NoteHeader';
 import NoteForm from '@/components/notes/NoteForm';
@@ -12,8 +12,14 @@ export default function NewNotePage() {
   const router = useRouter();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [category, setCategory] = useState<NoteCategory>('other');
-  const [isSaving, setIsSaving] = useState(false);
+  const [category, setCategory] = useState('general');
+  const [tags, setTags] = useState<string[]>([]);
+  const [is_favorite, setIsFavorite] = useState(false);
+  
+  const { loading: isSaving, execute: createNote } = useApi({
+    successMessage: 'Note created successfully',
+    showErrorMessage: true,
+  });
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -21,23 +27,16 @@ export default function NewNotePage() {
       return;
     }
 
-    setIsSaving(true);
+    await createNote(() => notesApi.createNote({
+      title: title.trim(),
+      content,
+      category,
+      tags,
+      is_favorite,
+    }));
     
-    try {
-      const newNote = await notesApi.createNote({
-        title: title.trim(),
-        content,
-        category,
-      });
-      
-      // Redirect to the newly created note
-      router.push(`/notes/${newNote.id}`);
-    } catch (error) {
-      console.error('Error saving note:', error);
-      alert('Failed to save note. Please try again.');
-    } finally {
-      setIsSaving(false);
-    }
+    // Redirect to notes list on success
+    router.push('/notes');
   };
 
   return (
@@ -54,9 +53,13 @@ export default function NewNotePage() {
           title={title}
           content={content}
           category={category}
+          tags={tags}
+          is_favorite={is_favorite}
           onTitleChange={setTitle}
           onContentChange={setContent}
           onCategoryChange={setCategory}
+          onTagsChange={setTags}
+          onFavoriteChange={setIsFavorite}
           isEditing={false}
         />
       </div>

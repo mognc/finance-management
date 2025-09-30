@@ -2,6 +2,7 @@
 
 import Sidebar from '../navigation/Sidebar';
 import Header from '../navigation/Header';
+import ToastContainer from '../ui/Toast';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { cn } from '@/lib/utils';
 
@@ -37,6 +38,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
           {children}
         </main>
       </div>
+      
+      {/* Toast Notifications */}
+      <ToastContainer />
     </div>
   );
 }
