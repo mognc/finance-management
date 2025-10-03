@@ -1,0 +1,25 @@
+# Production Migration Configuration
+# Use this for running migrations in production environments
+
+services:
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migration
+    environment:
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-finance_management}
+      - DB_USER=${DB_USER:-finance_user}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_SSLMODE=${DB_SSLMODE:-require}
+    volumes:
+      - ./db/migrations:/app/db/migrations
+    networks:
+      - finance-network
+    restart: "no"
+
+networks:
+  finance-network:
+    external: true

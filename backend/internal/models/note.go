@@ -8,15 +8,16 @@ import (
 
 // Note represents a note/document in the system
 type Note struct {
-	ID         uuid.UUID `json:"id" db:"id"`
-	UserID     uuid.UUID `json:"user_id" db:"user_id"`
-	Title      string    `json:"title" db:"title"`
-	Content    string    `json:"content" db:"content"`
-	Category   string    `json:"category" db:"category"`
-	Tags       []string  `json:"tags" db:"tags"`
-	IsFavorite bool      `json:"is_favorite" db:"is_favorite"`
-	CreatedAt  time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at" db:"updated_at"`
+	ID         uuid.UUID `json:"id" gorm:"type:uuid;primaryKey;column:id"`
+	UserID     uuid.UUID `json:"user_id" gorm:"type:uuid;index;column:user_id"`
+	Title      string    `json:"title" gorm:"column:title"`
+	Content    string    `json:"content" gorm:"column:content"`
+	Category   string    `json:"category" gorm:"column:category"`
+	Tags       []string  `json:"tags" gorm:"type:text[];column:tags"`
+	IsFavorite bool      `json:"is_favorite" gorm:"column:is_favorite"`
+	IsArchived bool      `json:"is_archived" gorm:"column:is_archived"`
+	CreatedAt  time.Time `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt  time.Time `json:"updated_at" gorm:"column:updated_at"`
 }
 
 // CreateNoteRequest represents the request to create a new note
@@ -35,6 +36,7 @@ type UpdateNoteRequest struct {
 	Category   *string   `json:"category"`
 	Tags       *[]string `json:"tags"`
 	IsFavorite *bool     `json:"is_favorite"`
+	IsArchived *bool     `json:"is_archived"`
 }
 
 // NoteResponse represents the response for note operations
@@ -45,6 +47,7 @@ type NoteResponse struct {
 	Category   string    `json:"category"`
 	Tags       []string  `json:"tags"`
 	IsFavorite bool      `json:"is_favorite"`
+	IsArchived bool      `json:"is_archived"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 }

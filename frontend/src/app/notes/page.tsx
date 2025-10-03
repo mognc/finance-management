@@ -4,37 +4,29 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { PlusIcon, MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
 import { notesApi } from '@/lib/api/notes';
-import type { Note, NoteCategory } from '@/types/notes';
+import { useApi } from '@/hooks/use-api';
+import type { Note } from '@/types/notes';
 import MainLayout from '@/components/layout/MainLayout';
 import NoteCard from '@/components/notes/NoteCard';
 import { NOTE_CATEGORIES } from '@/lib/utils';
 
 export default function NotesPage() {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  
+  const { data: notes, loading: isLoading, execute: loadNotes } = useApi<Note[]>({
+    showSuccessMessage: false,
+    showErrorMessage: true,
+  });
 
   // Load notes
   useEffect(() => {
-    const loadNotes = async () => {
-      try {
-        setIsLoading(true);
-        const response = await notesApi.getNotes({
-          ...(searchTerm && { query: searchTerm }),
-          ...(selectedCategory !== 'all' && { category: selectedCategory as NoteCategory }),
-        });
-        setNotes(response.notes);
-      } catch (error) {
-        console.error('Error loading notes:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadNotes();
-  }, [searchTerm, selectedCategory]);
+    loadNotes(() => notesApi.getNotes({
+      ...(searchTerm && { query: searchTerm }),
+      ...(selectedCategory !== 'all' && { category: selectedCategory }),
+    }));
+  }, [searchTerm, selectedCategory, loadNotes]);
 
 
   return (
@@ -107,7 +99,7 @@ export default function NotesPage() {
             </div>
           ))}
         </div>
-      ) : notes.length === 0 ? (
+      ) : !notes || notes.length === 0 ? (
         <div className="text-center py-12">
           <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
             <PlusIcon className="w-12 h-12 text-gray-400" />
