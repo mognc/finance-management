@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
 import { useEffect, useMemo, useState } from 'react';
 import { financeApi } from '@/lib/api';
 import { showError, showSuccess } from '@/lib/utils/notifications';
+import MainLayout from '@/components/layout/MainLayout';
 
 interface GoalWithProgressDTO {
   Goal: {
@@ -69,11 +70,12 @@ export default function GoalsPage() {
   };
 
   return (
-    <div className="p-6 space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Goals & Wishlist</h1>
-        <p className="text-gray-500">Track savings progress and timelines for your targets.</p>
-      </div>
+    <MainLayout>
+      <div className="p-6 max-w-7xl mx-auto space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Goals & Wishlist</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Track savings progress and timelines for your targets.</p>
+        </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="p-4 border rounded-lg">
@@ -101,27 +103,28 @@ export default function GoalsPage() {
         </div>
       </div>
 
-      <div className="p-4 border rounded-lg">
-        <h2 className="font-semibold mb-3">Goals Progress</h2>
-        {progressRows.length === 0 ? (
-          <p className="text-sm text-gray-500">No goals yet</p>
-        ) : (
-          <div className="space-y-3">
-            {progressRows.map(row => (
-              <div key={row.id} className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span>{row.name}</span>
-                  <span>${row.saved.toFixed(2)} / ${row.target.toFixed(2)} ({row.pct}%) {row.targetDate ? `· target ${row.targetDate}` : ''}</span>
+        <div className="p-4 border rounded-lg">
+          <h2 className="font-semibold mb-3">Goals Progress</h2>
+          {progressRows.length === 0 ? (
+            <p className="text-sm text-gray-500">No goals yet</p>
+          ) : (
+            <div className="space-y-3">
+              {progressRows.map(row => (
+                <div key={row.id} className="space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span>{row.name}</span>
+                    <span>${row.saved.toFixed(2)} / ${row.target.toFixed(2)} ({row.pct}%) {row.targetDate ? `· target ${row.targetDate}` : ''}</span>
+                  </div>
+                  <div className="w-full h-2 bg-gray-200 rounded">
+                    <div className="h-2 bg-green-600 rounded" style={{ width: `${row.pct}%` }} />
+                  </div>
                 </div>
-                <div className="w-full h-2 bg-gray-200 rounded">
-                  <div className="h-2 bg-green-600 rounded" style={{ width: `${row.pct}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </MainLayout>
   );
 }
 

@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
 import { useEffect, useMemo, useState } from 'react';
 import { financeApi, type MonthlySummaryDTO } from '@/lib/api';
 import { showError, showSuccess } from '@/lib/utils/notifications';
+import MainLayout from '@/components/layout/MainLayout';
 
 export default function FinancePage() {
   const now = new Date();
@@ -82,13 +83,14 @@ export default function FinancePage() {
   };
 
   return (
-    <div className="p-6 space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Finance</h1>
-        <p className="text-gray-500">Track income and expenses; view monthly summary.</p>
-      </div>
+    <MainLayout>
+      <div className="p-6 max-w-7xl mx-auto space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Finance</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Track income and expenses; view monthly summary.</p>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="p-4 border rounded-lg">
           <h2 className="font-semibold mb-3">Add Income</h2>
           <form onSubmit={handleAddIncome} className="space-y-3">
@@ -124,40 +126,41 @@ export default function FinancePage() {
             <button className="px-4 py-2 bg-gray-700 text-white rounded" onClick={() => refresh()}>Refresh</button>
           </div>
         </div>
-      </div>
+        </div>
 
-      <div className="p-4 border rounded-lg">
-        <h2 className="font-semibold mb-3">Monthly Summary</h2>
-        {loading ? (
-          <div>Loading...</div>
-        ) : summary ? (
-          <div className="space-y-2">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Stat label="Income" value={summary.total_income} />
-              <Stat label="Expenses" value={summary.total_expenses} />
-              <Stat label="Savings" value={summary.total_savings} />
+        <div className="p-4 border rounded-lg">
+          <h2 className="font-semibold mb-3">Monthly Summary</h2>
+          {loading ? (
+            <div>Loading...</div>
+          ) : summary ? (
+            <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Stat label="Income" value={summary.total_income} />
+                <Stat label="Expenses" value={summary.total_expenses} />
+                <Stat label="Savings" value={summary.total_savings} />
+              </div>
+              <div>
+                <h3 className="font-medium mb-2">By Category</h3>
+                {categoryRows.length === 0 ? (
+                  <p className="text-sm text-gray-500">No data</p>
+                ) : (
+                  <ul className="list-disc ml-6">
+                    {categoryRows.map((row) => (
+                      <li key={row.key} className="flex justify-between">
+                        <span>{row.key}</span>
+                        <span>${row.value.toFixed(2)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
-            <div>
-              <h3 className="font-medium mb-2">By Category</h3>
-              {categoryRows.length === 0 ? (
-                <p className="text-sm text-gray-500">No data</p>
-              ) : (
-                <ul className="list-disc ml-6">
-                  {categoryRows.map((row) => (
-                    <li key={row.key} className="flex justify-between">
-                      <span>{row.key}</span>
-                      <span>${row.value.toFixed(2)}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div>No summary available.</div>
-        )}
+          ) : (
+            <div>No summary available.</div>
+          )}
+        </div>
       </div>
-    </div>
+    </MainLayout>
   );
 }
 
