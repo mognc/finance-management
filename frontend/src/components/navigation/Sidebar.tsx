@@ -28,6 +28,8 @@ interface SidebarProps {
 const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
   { name: 'Notes', href: '/notes', icon: DocumentTextIcon },
+  { name: 'Finance', href: '/finance', icon: DocumentTextIcon },
+  { name: 'Goals', href: '/goals', icon: DocumentTextIcon },
   { name: 'Settings', href: '/settings', icon: CogIcon }
 ];
 
