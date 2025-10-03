@@ -41,7 +41,7 @@ check_migrations() {
     echo "📊 Checking migration status..."
     docker-compose exec -T postgres psql -U finance_user -d finance_management -c "
         SELECT version, applied_at 
-        FROM schema_migrations 
+        FROM app_schema_migrations 
         ORDER BY applied_at DESC;
     "
 }
