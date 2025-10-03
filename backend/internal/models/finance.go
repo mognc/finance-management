@@ -56,6 +56,13 @@ type CreateIncomeRequest struct {
 	ReceivedAt time.Time `json:"received_at" binding:"required"`
 }
 
+// UpdateIncomeRequest for editing income
+type UpdateIncomeRequest struct {
+	Source     *string    `json:"source"`
+	Amount     *float64   `json:"amount"`
+	ReceivedAt *time.Time `json:"received_at"`
+}
+
 // CreateExpenseRequest for adding expense
 type CreateExpenseRequest struct {
 	Category    string     `json:"category"`
@@ -65,10 +72,26 @@ type CreateExpenseRequest struct {
 	GoalID      *uuid.UUID `json:"goal_id"`
 }
 
+// UpdateExpenseRequest for editing expense
+type UpdateExpenseRequest struct {
+	Category    *string     `json:"category"`
+	Description *string     `json:"description"`
+	Amount      *float64    `json:"amount"`
+	SpentAt     *time.Time  `json:"spent_at"`
+	GoalID      **uuid.UUID `json:"goal_id"`
+}
+
 // CreateGoalRequest for creating a goal
 type CreateGoalRequest struct {
 	Name         string     `json:"name" binding:"required"`
 	TargetAmount float64    `json:"target_amount" binding:"required"`
+	TargetDate   *time.Time `json:"target_date"`
+}
+
+// UpdateGoalRequest for editing goal
+type UpdateGoalRequest struct {
+	Name         *string    `json:"name"`
+	TargetAmount *float64   `json:"target_amount"`
 	TargetDate   *time.Time `json:"target_date"`
 }
 

@@ -39,9 +39,16 @@ func SetupRoutes(r *gin.Engine) {
 		api.DELETE("/notes/:id", notesHandler.DeleteNote)
 
 		// Finance MVP endpoints
+		api.GET("/finance/incomes", financeHandler.ListIncomes)
 		api.POST("/finance/incomes", financeHandler.CreateIncome)
+		api.PUT("/finance/incomes/:id", financeHandler.UpdateIncome)
+		api.DELETE("/finance/incomes/:id", financeHandler.DeleteIncome)
+		api.GET("/finance/expenses", financeHandler.ListExpenses)
 		api.POST("/finance/expenses", financeHandler.CreateExpense)
+		api.PUT("/finance/expenses/:id", financeHandler.UpdateExpense)
+		api.DELETE("/finance/expenses/:id", financeHandler.DeleteExpense)
 		api.POST("/finance/goals", financeHandler.CreateGoal)
+		api.PUT("/finance/goals/:id", financeHandler.UpdateGoal)
 		api.POST("/finance/goals/contributions", financeHandler.CreateGoalContribution)
 		api.GET("/finance/summary", financeHandler.GetMonthlySummary)
 		api.GET("/finance/categories", financeHandler.ListCategories)

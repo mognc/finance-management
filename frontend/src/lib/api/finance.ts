@@ -39,12 +39,22 @@ export interface MonthlySummaryDTO {
 export const financeApi = {
   createIncome: (payload: IncomePayload) =>
     apiRequest(() => apiClient.post('/api/finance/incomes', payload)),
+  listIncomes: () => apiRequest(() => apiClient.get('/api/finance/incomes')),
+  updateIncome: (id: string, updates: Partial<IncomePayload>) =>
+    apiRequest(() => apiClient.put(`/api/finance/incomes/${id}`, updates)),
+  deleteIncome: (id: string) => apiRequest(() => apiClient.delete(`/api/finance/incomes/${id}`)),
 
   createExpense: (payload: ExpensePayload) =>
     apiRequest(() => apiClient.post('/api/finance/expenses', payload)),
+  listExpenses: () => apiRequest(() => apiClient.get('/api/finance/expenses')),
+  updateExpense: (id: string, updates: Partial<ExpensePayload>) =>
+    apiRequest(() => apiClient.put(`/api/finance/expenses/${id}`, updates)),
+  deleteExpense: (id: string) => apiRequest(() => apiClient.delete(`/api/finance/expenses/${id}`)),
 
   createGoal: (payload: GoalPayload) =>
     apiRequest(() => apiClient.post('/api/finance/goals', payload)),
+  updateGoal: (id: string, updates: any) =>
+    apiRequest(() => apiClient.put(`/api/finance/goals/${id}`, updates)),
 
   contributeToGoal: (payload: GoalContributionPayload) =>
     apiRequest(() => apiClient.post('/api/finance/goals/contributions', payload)),

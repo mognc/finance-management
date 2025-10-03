@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { financeApi } from '@/lib/api';
 import { showError, showSuccess } from '@/lib/utils/notifications';
 import MainLayout from '@/components/layout/MainLayout';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis } from 'recharts';
 
 interface GoalWithProgressDTO {
   Goal: {
@@ -26,6 +27,12 @@ export default function GoalsPage() {
   const [contribAmount, setContribAmount] = useState('');
   const [contribDate, setContribDate] = useState(() => new Date().toISOString().slice(0, 10));
 
+  // Editing table for goals
+  const saveGoal = async (g: any) => {
+    await financeApi.updateGoal(g.Goal.id, { name: g.Goal.name, target_amount: g.Goal.target_amount, target_date: g.Goal.target_date ? `${g.Goal.target_date.slice(0,10)}T00:00:00Z` : undefined });
+    await loadGoals();
+  };
+
   const loadGoals = async () => {
     const res = await financeApi.listGoals();
     if (res.success && Array.isArray(res.data)) setGoals(res.data as any);
@@ -41,6 +48,20 @@ export default function GoalsPage() {
     const pct = target > 0 ? Math.min(100, Math.round((saved / target) * 100)) : 0;
     return { id: g.Goal.id, name: g.Goal.name, saved, target, pct, targetDate: g.Goal.target_date };
   }), [goals]);
+
+  const palette = (i: number) => {
+    const colors = ['#2563eb', '#16a34a', '#f59e0b', '#ef4444', '#0ea5e9', '#8b5cf6', '#22c55e'];
+    return colors[i % colors.length];
+  };
+
+  const pieData = useMemo(() => progressRows.map(r => ({ name: r.name, value: Math.max(0, r.saved) })), [progressRows]);
+  const barData = useMemo(() => progressRows.map(r => ({ name: r.name, saved: r.saved, target: r.target })), [progressRows]);
+
+  const ProgressChart = ({ pct }: { pct: number }) => (
+    <div className="w-full h-2 bg-gray-200 rounded">
+      <div className="h-2 bg-green-600 rounded" style={{ width: `${pct}%` }} />
+    </div>
+  );
 
   const handleCreateGoal = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,22 +126,58 @@ export default function GoalsPage() {
 
         <div className="p-4 border rounded-lg">
           <h2 className="font-semibold mb-3">Goals Progress</h2>
-          {progressRows.length === 0 ? (
+        {progressRows.length === 0 ? (
             <p className="text-sm text-gray-500">No goals yet</p>
           ) : (
-            <div className="space-y-3">
-              {progressRows.map(row => (
-                <div key={row.id} className="space-y-1">
+          <div className="space-y-6">
+            {/* Charts */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="w-full h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={80} label>
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={palette(index)} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="w-full h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={barData}>
+                    <XAxis dataKey="name" hide={false} interval={0} angle={-20} textAnchor="end" height={50} />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="saved" fill="#16a34a" />
+                    <Bar dataKey="target" fill="#2563eb" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {goals.map((g: any) => {
+              const row = progressRows.find(r => r.id === g.Goal.id)!;
+              return (
+                <div key={g.Goal.id} className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-2 items-center">
+                    <input className="border rounded px-2 py-1" value={g.Goal.name} onChange={(e) => g.Goal.name = e.target.value} />
+                    <input className="border rounded px-2 py-1" type="number" step="0.01" value={g.Goal.target_amount} onChange={(e) => g.Goal.target_amount = parseFloat(e.target.value)} />
+                    <input className="border rounded px-2 py-1" type="date" value={(g.Goal.target_date || '').slice(0,10)} onChange={(e) => g.Goal.target_date = e.target.value} />
+                    <div className="text-right">
+                      <button className="px-2 py-1 text-blue-600" onClick={() => saveGoal(g)}>Save</button>
+                    </div>
+                  </div>
                   <div className="flex justify-between text-sm">
                     <span>{row.name}</span>
                     <span>${row.saved.toFixed(2)} / ${row.target.toFixed(2)} ({row.pct}%) {row.targetDate ? `· target ${row.targetDate}` : ''}</span>
                   </div>
-                  <div className="w-full h-2 bg-gray-200 rounded">
-                    <div className="h-2 bg-green-600 rounded" style={{ width: `${row.pct}%` }} />
-                  </div>
+                  <ProgressChart pct={row.pct} />
                 </div>
-              ))}
-            </div>
+              );
+            })}
+          </div>
           )}
         </div>
       </div>

@@ -44,6 +44,17 @@ func (h *FinanceHandler) CreateIncome(c *gin.Context) {
 	c.JSON(http.StatusCreated, income)
 }
 
+// ListIncomes GET /api/finance/incomes
+func (h *FinanceHandler) ListIncomes(c *gin.Context) {
+	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
+	items, err := h.repo.ListIncomes(userID, 100)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list incomes"})
+		return
+	}
+	c.JSON(http.StatusOK, items)
+}
+
 // CreateExpense handles POST /api/finance/expenses
 func (h *FinanceHandler) CreateExpense(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
@@ -67,6 +78,113 @@ func (h *FinanceHandler) CreateExpense(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, expense)
+}
+
+// ListExpenses GET /api/finance/expenses
+func (h *FinanceHandler) ListExpenses(c *gin.Context) {
+	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
+	items, err := h.repo.ListExpenses(userID, 100)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list expenses"})
+		return
+	}
+	c.JSON(http.StatusOK, items)
+}
+
+// UpdateIncome PUT /api/finance/incomes/:id
+func (h *FinanceHandler) UpdateIncome(c *gin.Context) {
+	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	var req models.UpdateIncomeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
+		return
+	}
+	updates := map[string]interface{}{}
+	if req.Source != nil {
+		updates["source"] = *req.Source
+	}
+	if req.Amount != nil {
+		updates["amount"] = *req.Amount
+	}
+	if req.ReceivedAt != nil {
+		updates["received_at"] = *req.ReceivedAt
+	}
+	if err := h.repo.UpdateIncome(id, userID, updates); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+// UpdateExpense PUT /api/finance/expenses/:id
+func (h *FinanceHandler) UpdateExpense(c *gin.Context) {
+	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	var req models.UpdateExpenseRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
+		return
+	}
+	updates := map[string]interface{}{}
+	if req.Category != nil {
+		updates["category"] = *req.Category
+	}
+	if req.Description != nil {
+		updates["description"] = *req.Description
+	}
+	if req.Amount != nil {
+		updates["amount"] = *req.Amount
+	}
+	if req.SpentAt != nil {
+		updates["spent_at"] = *req.SpentAt
+	}
+	if req.GoalID != nil {
+		updates["goal_id"] = req.GoalID
+	}
+	if err := h.repo.UpdateExpense(id, userID, updates); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+// DeleteIncome DELETE /api/finance/incomes/:id
+func (h *FinanceHandler) DeleteIncome(c *gin.Context) {
+	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	if err := h.repo.DeleteIncome(id, userID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+// DeleteExpense DELETE /api/finance/expenses/:id
+func (h *FinanceHandler) DeleteExpense(c *gin.Context) {
+	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	if err := h.repo.DeleteExpense(id, userID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
 // CreateGoal handles POST /api/finance/goals
@@ -181,4 +299,34 @@ func (h *FinanceHandler) ListGoalsWithProgress(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, goals)
+}
+
+// UpdateGoal PUT /api/finance/goals/:id
+func (h *FinanceHandler) UpdateGoal(c *gin.Context) {
+	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	var req models.UpdateGoalRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
+		return
+	}
+	updates := map[string]interface{}{}
+	if req.Name != nil {
+		updates["name"] = *req.Name
+	}
+	if req.TargetAmount != nil {
+		updates["target_amount"] = *req.TargetAmount
+	}
+	if req.TargetDate != nil {
+		updates["target_date"] = *req.TargetDate
+	}
+	if err := h.repo.UpdateGoal(id, userID, updates); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }

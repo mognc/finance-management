@@ -19,6 +19,13 @@ type FinanceRepositoryInterface interface {
 	CreateCategory(cat *models.Category) error
 	ListCategories(userID uuid.UUID) ([]models.Category, error)
 	ListGoalsWithProgress(userID uuid.UUID) ([]GoalWithProgress, error)
+	ListIncomes(userID uuid.UUID, limit int) ([]models.Income, error)
+	ListExpenses(userID uuid.UUID, limit int) ([]models.Expense, error)
+	UpdateIncome(id, userID uuid.UUID, updates map[string]interface{}) error
+	UpdateExpense(id, userID uuid.UUID, updates map[string]interface{}) error
+	DeleteIncome(id, userID uuid.UUID) error
+	DeleteExpense(id, userID uuid.UUID) error
+	UpdateGoal(id, userID uuid.UUID, updates map[string]interface{}) error
 }
 
 type FinanceRepository struct {
@@ -88,6 +95,94 @@ func (r *FinanceRepository) ListGoalsWithProgress(userID uuid.UUID) ([]GoalWithP
 		result = append(result, GoalWithProgress{Goal: g, ContributedSum: contribMap[g.ID], ExpenseSum: expenseMap[g.ID]})
 	}
 	return result, nil
+}
+
+func (r *FinanceRepository) ListIncomes(userID uuid.UUID, limit int) ([]models.Income, error) {
+	var items []models.Income
+	q := r.db.Where("user_id = ?", userID).Order("received_at DESC")
+	if limit > 0 {
+		q = q.Limit(limit)
+	}
+	if err := q.Find(&items).Error; err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+func (r *FinanceRepository) ListExpenses(userID uuid.UUID, limit int) ([]models.Expense, error) {
+	var items []models.Expense
+	q := r.db.Where("user_id = ?", userID).Order("spent_at DESC")
+	if limit > 0 {
+		q = q.Limit(limit)
+	}
+	if err := q.Find(&items).Error; err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+func (r *FinanceRepository) UpdateIncome(id, userID uuid.UUID, updates map[string]interface{}) error {
+	if len(updates) == 0 {
+		return nil
+	}
+	tx := r.db.Model(&models.Income{}).Where("id = ? AND user_id = ?", id, userID).Updates(updates)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *FinanceRepository) UpdateExpense(id, userID uuid.UUID, updates map[string]interface{}) error {
+	if len(updates) == 0 {
+		return nil
+	}
+	tx := r.db.Model(&models.Expense{}).Where("id = ? AND user_id = ?", id, userID).Updates(updates)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *FinanceRepository) DeleteIncome(id, userID uuid.UUID) error {
+	tx := r.db.Where("id = ? AND user_id = ?", id, userID).Delete(&models.Income{})
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *FinanceRepository) DeleteExpense(id, userID uuid.UUID) error {
+	tx := r.db.Where("id = ? AND user_id = ?", id, userID).Delete(&models.Expense{})
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *FinanceRepository) UpdateGoal(id, userID uuid.UUID, updates map[string]interface{}) error {
+	if len(updates) == 0 {
+		return nil
+	}
+	tx := r.db.Model(&models.Goal{}).Where("id = ? AND user_id = ?", id, userID).Updates(updates)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 // GetMonthlySummary aggregates income, expenses, savings and breakdowns for a given month
