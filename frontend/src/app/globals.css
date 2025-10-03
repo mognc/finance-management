@@ -14,7 +14,7 @@
   --color-accent: #f1f5f9;
   --color-accent-foreground: #0f172a;
   --color-destructive: #ef4444;
-  --color-destructive-foreground: #f8fafc;
+  --color-destructive-foreground: #f8fafc94;
   --color-border: #e2e8f0;
   --color-input: #e2e8f0;
   --color-ring: #0f172a;
@@ -89,12 +89,12 @@
   border-color: var(--color-border) !important;
 }
 
-.bg-gray-100 {
+.bg-gray-50 {
   background-color: var(--color-secondary) !important;
 }
 
-.dark .bg-gray-700 {
-  background-color: var(--color-secondary) !important;
+.dark .bg-gray-900 {
+  background-color: var(--background) !important;
 }
 
 .text-gray-700 {
@@ -117,8 +117,18 @@
   background-color: var(--color-muted) !important;
 }
 
-.dark .bg-gray-900 {
-  background-color: var(--background) !important;
+/* Dark surface contrast for hover/fills */
+.dark .bg-gray-700 {
+  background-color: var(--color-secondary) !important;
+}
+
+/* Border variants used by inputs/cards */
+.border-gray-300 {
+  border-color: var(--color-border) !important;
+}
+
+.dark .border-gray-600 {
+  border-color: var(--color-border) !important;
 }
 
 body {
