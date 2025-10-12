@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from 'react';
-import { financeApi, type MonthlySummaryDTO } from '@/lib/api';
+import { financeApi, type MonthlySummaryDTO, type HistoricalSummaryDTO } from '@/lib/api';
 import { showError, showSuccess } from '@/lib/utils/notifications';
 import MainLayout from '@/components/layout/MainLayout';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, Legend, LineChart, Line } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -21,7 +21,11 @@ import {
   Receipt,
   Wallet,
   Target,
-  Filter
+  Filter,
+  Download,
+  Calendar,
+  History,
+  FileText
 } from 'lucide-react';
 
 export default function FinancePage() {
@@ -30,6 +34,18 @@ export default function FinancePage() {
   const [month, setMonth] = useState<number>(now.getMonth() + 1);
   const [summary, setSummary] = useState<MonthlySummaryDTO | null>(null);
   const [loading, setLoading] = useState(false);
+  
+  // Historical data state
+  const [historicalData, setHistoricalData] = useState<HistoricalSummaryDTO[]>([]);
+  const [historicalLoading, setHistoricalLoading] = useState(false);
+  const [historicalPeriod, setHistoricalPeriod] = useState<'weekly' | 'monthly' | 'yearly'>('monthly');
+  const [historicalStartDate, setHistoricalStartDate] = useState(() => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - 6); // 6 months ago
+    return date.toISOString().slice(0, 10);
+  });
+  const [historicalEndDate, setHistoricalEndDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [showHistoricalView, setShowHistoricalView] = useState(false);
 
   const [incomeAmount, setIncomeAmount] = useState('');
   const [incomeSource, setIncomeSource] = useState('');
@@ -76,6 +92,55 @@ export default function FinancePage() {
     else showError('Failed to load summary');
   };
 
+  const loadHistoricalData = async () => {
+    setHistoricalLoading(true);
+    const res = await financeApi.getHistoricalData(historicalPeriod, historicalStartDate, historicalEndDate);
+    setHistoricalLoading(false);
+    if (res.success && res.data) {
+      setHistoricalData(res.data);
+    } else {
+      showError('Failed to load historical data');
+    }
+  };
+
+  const generateHistoricalSummary = async () => {
+    const res = await financeApi.generateHistoricalSummary({
+      period_type: historicalPeriod,
+      start_date: historicalStartDate,
+      end_date: historicalEndDate
+    });
+    if (res.success) {
+      showSuccess('Historical summary generated successfully');
+      await loadHistoricalData();
+    } else {
+      showError('Failed to generate historical summary');
+    }
+  };
+
+  const downloadPDFReport = async () => {
+    const res = await financeApi.generatePDFReport({
+      period_type: historicalPeriod,
+      start_date: historicalStartDate,
+      end_date: historicalEndDate,
+      format: 'summary'
+    });
+    if (res.success) {
+      // Create a blob and download
+      const blob = new Blob([res.data], { type: 'text/html' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `financial-report-${historicalPeriod}-${historicalStartDate}-to-${historicalEndDate}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      showSuccess('Report downloaded successfully');
+    } else {
+      showError('Failed to generate PDF report');
+    }
+  };
+
   useEffect(() => {
     refresh();
     loadCategories();
@@ -98,6 +163,17 @@ export default function FinancePage() {
     { name: 'Expenses', value: summary?.total_expenses || 0 },
     { name: 'Savings', value: summary?.total_savings || 0 },
   ]), [summary]);
+
+  // Historical data for charts
+  const historicalChartData = useMemo(() => {
+    return historicalData.map(item => ({
+      period: item.period_start.slice(0, 10),
+      income: item.total_income,
+      expenses: item.total_expense,
+      savings: item.total_savings,
+      period_type: item.period_type
+    })).sort((a, b) => new Date(a.period).getTime() - new Date(b.period).getTime());
+  }, [historicalData]);
 
   const handleAddIncome = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -266,6 +342,14 @@ export default function FinancePage() {
                 <Target className="h-4 w-4 mr-2" />
                 Add Category
               </Button>
+              <Button 
+                onClick={() => setShowHistoricalView(!showHistoricalView)}
+                variant="outline"
+                className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+              >
+                <History className="h-4 w-4 mr-2" />
+                {showHistoricalView ? 'Current View' : 'Historical View'}
+              </Button>
             </div>
           </div>
 
@@ -311,6 +395,77 @@ export default function FinancePage() {
               </div>
             </div>
           </div>
+
+          {/* Historical Data Controls */}
+          {showHistoricalView && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-2 mb-4">
+                <Calendar className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Historical Data Analysis</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Period Type
+                  </label>
+                  <select
+                    value={historicalPeriod}
+                    onChange={(e) => setHistoricalPeriod(e.target.value as 'weekly' | 'monthly' | 'yearly')}
+                    className="w-full h-10 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Start Date
+                  </label>
+                  <Input
+                    value={historicalStartDate}
+                    onChange={(e) => setHistoricalStartDate(e.target.value)}
+                    type="date"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    End Date
+                  </label>
+                  <Input
+                    value={historicalEndDate}
+                    onChange={(e) => setHistoricalEndDate(e.target.value)}
+                    type="date"
+                  />
+                </div>
+                <div className="flex items-end gap-2">
+                  <Button 
+                    onClick={loadHistoricalData}
+                    disabled={historicalLoading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {historicalLoading ? 'Loading...' : 'Load Data'}
+                  </Button>
+                  <Button 
+                    onClick={generateHistoricalSummary}
+                    variant="outline"
+                    className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Generate
+                  </Button>
+                  <Button 
+                    onClick={downloadPDFReport}
+                    variant="outline"
+                    className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    PDF
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Summary Cards */}
           {loading ? (
@@ -416,6 +571,54 @@ export default function FinancePage() {
                         <Legend />
                         <Bar dataKey="value" fill="#3b82f6" />
                       </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Historical Data Charts */}
+          {showHistoricalView && historicalChartData.length > 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-2 mb-6">
+                <History className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Historical Financial Trends</h2>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Income vs Expenses Over Time
+                  </h3>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={historicalChartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                        <XAxis dataKey="period" />
+                        <YAxis />
+                        <Tooltip formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Amount']} />
+                        <Legend />
+                        <Bar dataKey="income" fill="#16a34a" name="Income" />
+                        <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5" />
+                    Savings Trend
+                  </h3>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={historicalChartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                        <XAxis dataKey="period" />
+                        <YAxis />
+                        <Tooltip formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Amount']} />
+                        <Legend />
+                        <Line type="monotone" dataKey="savings" stroke="#3b82f6" strokeWidth={2} name="Savings" />
+                      </LineChart>
                     </ResponsiveContainer>
                   </div>
                 </div>

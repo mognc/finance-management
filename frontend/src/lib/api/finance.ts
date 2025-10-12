@@ -16,13 +16,61 @@ export interface ExpensePayload {
 
 export interface GoalPayload {
   name: string;
+  description?: string;
+  category?: string;
   target_amount: number;
+  target_date?: string;
+  parent_goal_id?: string;
+  is_main_goal?: boolean;
 }
 
 export interface GoalContributionPayload {
   goal_id: string;
   amount: number;
   contributed_at: string;
+}
+
+export interface GoalCategory {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  created_at: string;
+}
+
+export interface GoalWithSubgoals {
+  goal: {
+    id: string;
+    name: string;
+    description: string;
+    category: string;
+    target_amount: number;
+    target_date?: string;
+    parent_goal_id?: string;
+    is_main_goal: boolean;
+    created_at: string;
+    updated_at: string;
+  };
+  subgoals: Array<{
+    id: string;
+    name: string;
+    description: string;
+    category: string;
+    target_amount: number;
+    target_date?: string;
+    parent_goal_id?: string;
+    is_main_goal: boolean;
+    created_at: string;
+    updated_at: string;
+  }>;
+}
+
+export interface GoalExpensePayload {
+  goal_id: string;
+  expense_id: string;
+  amount: number;
+  description?: string;
 }
 
 export interface MonthlySummaryDTO {
@@ -34,6 +82,33 @@ export interface MonthlySummaryDTO {
   category_breakdown: Record<string, number>;
   goal_spending: Record<string, number>;
   goal_contributions: Record<string, number>;
+}
+
+export interface HistoricalSummaryDTO {
+  id: string;
+  user_id: string;
+  period_type: 'weekly' | 'monthly' | 'yearly';
+  period_start: string;
+  period_end: string;
+  total_income: number;
+  total_expense: number;
+  total_savings: number;
+  category_data: string; // JSON string
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HistoricalDataRequest {
+  period_type: 'weekly' | 'monthly' | 'yearly';
+  start_date: string;
+  end_date: string;
+}
+
+export interface PDFReportRequest {
+  period_type: 'weekly' | 'monthly' | 'yearly';
+  start_date: string;
+  end_date: string;
+  format?: 'summary' | 'detailed';
 }
 
 export const financeApi = {
@@ -73,6 +148,31 @@ export const financeApi = {
   createCategory: (name: string) => apiRequest(() => apiClient.post('/api/finance/categories', { name })),
   // Goals
   listGoals: () => apiRequest(() => apiClient.get('/api/finance/goals')),
+  
+  // Goal categories and hierarchical goals
+  listGoalCategories: () => apiRequest<GoalCategory[]>(() => apiClient.get('/api/finance/goals/categories')),
+  listMainGoalsWithSubgoals: () => apiRequest<GoalWithSubgoals[]>(() => apiClient.get('/api/finance/goals/hierarchical')),
+  createGoalExpense: (payload: GoalExpensePayload) =>
+    apiRequest(() => apiClient.post('/api/finance/goals/expenses', payload)),
+  listGoalExpenses: (goalId: string) =>
+    apiRequest(() => apiClient.get(`/api/finance/goals/${goalId}/expenses`)),
+  
+  // Historical data
+  getHistoricalData: (periodType: string, startDate: string, endDate: string) => {
+    const params = new URLSearchParams({
+      period_type: periodType,
+      start_date: startDate,
+      end_date: endDate
+    });
+    return apiRequest<HistoricalSummaryDTO[]>(() => apiClient.get(`/api/finance/historical?${params.toString()}`));
+  },
+  
+  generateHistoricalSummary: (payload: HistoricalDataRequest) =>
+    apiRequest<HistoricalSummaryDTO>(() => apiClient.post('/api/finance/historical/generate', payload)),
+  
+  // PDF Reports
+  generatePDFReport: (payload: PDFReportRequest) =>
+    apiRequest(() => apiClient.post('/api/finance/reports/pdf', payload)),
 };
 
 
