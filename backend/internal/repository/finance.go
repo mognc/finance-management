@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"encoding/json"
 	"time"
 
 	"finance-management/internal/models"
@@ -26,6 +27,16 @@ type FinanceRepositoryInterface interface {
 	DeleteIncome(id, userID uuid.UUID) error
 	DeleteExpense(id, userID uuid.UUID) error
 	UpdateGoal(id, userID uuid.UUID, updates map[string]interface{}) error
+	DeleteGoal(id, userID uuid.UUID) error
+	// Goal categories and hierarchical goals
+	ListGoalCategories() ([]models.GoalCategory, error)
+	ListMainGoalsWithSubgoals(userID uuid.UUID) ([]models.GoalWithSubgoals, error)
+	CreateGoalExpense(goalExpense *models.GoalExpense) error
+	ListGoalExpenses(userID uuid.UUID, goalID uuid.UUID) ([]models.GoalExpense, error)
+	// Historical data methods
+	CreateHistoricalSummary(summary *models.HistoricalSummary) error
+	GetHistoricalSummaries(userID uuid.UUID, periodType string, startDate, endDate time.Time) ([]models.HistoricalSummary, error)
+	GetHistoricalDataForPeriod(userID uuid.UUID, periodType string, startDate, endDate time.Time) (*models.HistoricalSummary, error)
 }
 
 type FinanceRepository struct {
@@ -185,6 +196,17 @@ func (r *FinanceRepository) UpdateGoal(id, userID uuid.UUID, updates map[string]
 	return nil
 }
 
+func (r *FinanceRepository) DeleteGoal(id, userID uuid.UUID) error {
+	tx := r.db.Where("id = ? AND user_id = ?", id, userID).Delete(&models.Goal{})
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
 // GetMonthlySummary aggregates income, expenses, savings and breakdowns for a given month
 func (r *FinanceRepository) GetMonthlySummary(userID uuid.UUID, year int, month int) (*models.MonthlySummary, error) {
 	start := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
@@ -271,4 +293,133 @@ func (r *FinanceRepository) GetMonthlySummary(userID uuid.UUID, year int, month 
 	summary.TotalSavings = totalContrib
 
 	return summary, nil
+}
+
+// CreateHistoricalSummary stores a historical summary
+func (r *FinanceRepository) CreateHistoricalSummary(summary *models.HistoricalSummary) error {
+	return r.db.Create(summary).Error
+}
+
+// GetHistoricalSummaries retrieves historical summaries for a given period
+func (r *FinanceRepository) GetHistoricalSummaries(userID uuid.UUID, periodType string, startDate, endDate time.Time) ([]models.HistoricalSummary, error) {
+	var summaries []models.HistoricalSummary
+	err := r.db.Where("user_id = ? AND period_type = ? AND period_start >= ? AND period_end <= ?",
+		userID, periodType, startDate, endDate).
+		Order("period_start DESC").
+		Find(&summaries).Error
+	return summaries, err
+}
+
+// GetHistoricalDataForPeriod generates historical data for a specific period
+func (r *FinanceRepository) GetHistoricalDataForPeriod(userID uuid.UUID, periodType string, startDate, endDate time.Time) (*models.HistoricalSummary, error) {
+	// Calculate totals for the period
+	var totalIncome, totalExpense float64
+
+	// Get total income for the period
+	if err := r.db.Model(&models.Income{}).
+		Where("user_id = ? AND received_at >= ? AND received_at <= ?", userID, startDate, endDate).
+		Select("COALESCE(SUM(amount), 0)").
+		Scan(&totalIncome).Error; err != nil {
+		return nil, err
+	}
+
+	// Get total expenses for the period
+	if err := r.db.Model(&models.Expense{}).
+		Where("user_id = ? AND spent_at >= ? AND spent_at <= ?", userID, startDate, endDate).
+		Select("COALESCE(SUM(amount), 0)").
+		Scan(&totalExpense).Error; err != nil {
+		return nil, err
+	}
+
+	// Get category breakdown
+	type catRow struct {
+		Category string
+		Total    float64
+	}
+	var catRows []catRow
+	if err := r.db.Model(&models.Expense{}).
+		Where("user_id = ? AND spent_at >= ? AND spent_at <= ?", userID, startDate, endDate).
+		Select("category, COALESCE(SUM(amount), 0) as total").
+		Group("category").
+		Scan(&catRows).Error; err != nil {
+		return nil, err
+	}
+
+	// Convert category data to JSON string
+	categoryData := make(map[string]float64)
+	for _, row := range catRows {
+		categoryData[row.Category] = row.Total
+	}
+
+	// Create historical summary
+	summary := &models.HistoricalSummary{
+		ID:           uuid.New(),
+		UserID:       userID,
+		PeriodType:   periodType,
+		PeriodStart:  startDate,
+		PeriodEnd:    endDate,
+		TotalIncome:  totalIncome,
+		TotalExpense: totalExpense,
+		TotalSavings: totalIncome - totalExpense,
+		CategoryData: "", // Will be set to JSON string
+		CreatedAt:    time.Now().UTC(),
+		UpdatedAt:    time.Now().UTC(),
+	}
+
+	// Convert category data to JSON
+	if len(categoryData) > 0 {
+		if jsonData, err := json.Marshal(categoryData); err == nil {
+			summary.CategoryData = string(jsonData)
+		}
+	}
+
+	return summary, nil
+}
+
+// ListGoalCategories returns all predefined goal categories
+func (r *FinanceRepository) ListGoalCategories() ([]models.GoalCategory, error) {
+	var categories []models.GoalCategory
+	if err := r.db.Order("name ASC").Find(&categories).Error; err != nil {
+		return nil, err
+	}
+	return categories, nil
+}
+
+// ListMainGoalsWithSubgoals returns main goals with their sub-goals
+func (r *FinanceRepository) ListMainGoalsWithSubgoals(userID uuid.UUID) ([]models.GoalWithSubgoals, error) {
+	// Get main goals
+	var mainGoals []models.Goal
+	if err := r.db.Where("user_id = ? AND is_main_goal = true", userID).Order("created_at DESC").Find(&mainGoals).Error; err != nil {
+		return nil, err
+	}
+
+	var result []models.GoalWithSubgoals
+	for _, mainGoal := range mainGoals {
+		// Get sub-goals for this main goal
+		var subgoals []models.Goal
+		if err := r.db.Where("user_id = ? AND parent_goal_id = ?", userID, mainGoal.ID).Order("created_at ASC").Find(&subgoals).Error; err != nil {
+			return nil, err
+		}
+
+		result = append(result, models.GoalWithSubgoals{
+			Goal:     mainGoal,
+			Subgoals: subgoals,
+		})
+	}
+
+	return result, nil
+}
+
+// CreateGoalExpense associates an expense with a goal
+func (r *FinanceRepository) CreateGoalExpense(goalExpense *models.GoalExpense) error {
+	return r.db.Create(goalExpense).Error
+}
+
+// ListGoalExpenses returns expenses associated with a specific goal
+func (r *FinanceRepository) ListGoalExpenses(userID uuid.UUID, goalID uuid.UUID) ([]models.GoalExpense, error) {
+	var goalExpenses []models.GoalExpense
+	if err := r.db.Where("user_id = ? AND goal_id = ?", userID, goalID).Order("created_at DESC").Find(&goalExpenses).Error; err != nil {
+		return nil, err
+	}
+	return goalExpenses, nil
 }
