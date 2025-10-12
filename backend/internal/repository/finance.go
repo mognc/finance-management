@@ -26,6 +26,7 @@ type FinanceRepositoryInterface interface {
 	DeleteIncome(id, userID uuid.UUID) error
 	DeleteExpense(id, userID uuid.UUID) error
 	UpdateGoal(id, userID uuid.UUID, updates map[string]interface{}) error
+	DeleteGoal(id, userID uuid.UUID) error
 }
 
 type FinanceRepository struct {
@@ -176,6 +177,17 @@ func (r *FinanceRepository) UpdateGoal(id, userID uuid.UUID, updates map[string]
 		return nil
 	}
 	tx := r.db.Model(&models.Goal{}).Where("id = ? AND user_id = ?", id, userID).Updates(updates)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *FinanceRepository) DeleteGoal(id, userID uuid.UUID) error {
+	tx := r.db.Where("id = ? AND user_id = ?", id, userID).Delete(&models.Goal{})
 	if tx.Error != nil {
 		return tx.Error
 	}

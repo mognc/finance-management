@@ -55,6 +55,7 @@ export const financeApi = {
     apiRequest(() => apiClient.post('/api/finance/goals', payload)),
   updateGoal: (id: string, updates: any) =>
     apiRequest(() => apiClient.put(`/api/finance/goals/${id}`, updates)),
+  deleteGoal: (id: string) => apiRequest(() => apiClient.delete(`/api/finance/goals/${id}`)),
 
   contributeToGoal: (payload: GoalContributionPayload) =>
     apiRequest(() => apiClient.post('/api/finance/goals/contributions', payload)),

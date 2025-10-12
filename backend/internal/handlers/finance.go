@@ -330,3 +330,18 @@ func (h *FinanceHandler) UpdateGoal(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
+
+// DeleteGoal DELETE /api/finance/goals/:id
+func (h *FinanceHandler) DeleteGoal(c *gin.Context) {
+	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	if err := h.repo.DeleteGoal(id, userID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}

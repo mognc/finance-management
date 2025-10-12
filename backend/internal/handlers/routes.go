@@ -49,6 +49,7 @@ func SetupRoutes(r *gin.Engine) {
 		api.DELETE("/finance/expenses/:id", financeHandler.DeleteExpense)
 		api.POST("/finance/goals", financeHandler.CreateGoal)
 		api.PUT("/finance/goals/:id", financeHandler.UpdateGoal)
+		api.DELETE("/finance/goals/:id", financeHandler.DeleteGoal)
 		api.POST("/finance/goals/contributions", financeHandler.CreateGoalContribution)
 		api.GET("/finance/summary", financeHandler.GetMonthlySummary)
 		api.GET("/finance/categories", financeHandler.ListCategories)
