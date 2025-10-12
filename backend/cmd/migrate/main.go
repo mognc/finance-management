@@ -53,13 +53,13 @@ func runMigrations(db *sql.DB, migrationDir string) error {
 		return fmt.Errorf("failed to read migration files: %w", err)
 	}
 
-	// Create migrations table if it doesn't exist
+	// Use an application-owned migrations table to avoid conflicts with other tools
 	createMigrationsTable := `
-		CREATE TABLE IF NOT EXISTS schema_migrations (
-			version VARCHAR(255) PRIMARY KEY,
-			applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-		);
-	`
+        CREATE TABLE IF NOT EXISTS app_schema_migrations (
+            version VARCHAR(255) PRIMARY KEY,
+            applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    `
 	if _, err := db.Exec(createMigrationsTable); err != nil {
 		return fmt.Errorf("failed to create migrations table: %w", err)
 	}
@@ -73,7 +73,7 @@ func runMigrations(db *sql.DB, migrationDir string) error {
 
 		// Check if migration already applied
 		var count int
-		err := db.QueryRow("SELECT COUNT(*) FROM schema_migrations WHERE version = $1", version).Scan(&count)
+		err := db.QueryRow("SELECT COUNT(*) FROM app_schema_migrations WHERE version = $1", version).Scan(&count)
 		if err != nil {
 			return fmt.Errorf("failed to check migration status: %w", err)
 		}
@@ -95,7 +95,7 @@ func runMigrations(db *sql.DB, migrationDir string) error {
 		}
 
 		// Record migration as applied
-		if _, err := db.Exec("INSERT INTO schema_migrations (version) VALUES ($1)", version); err != nil {
+		if _, err := db.Exec("INSERT INTO app_schema_migrations (version) VALUES ($1)", version); err != nil {
 			return fmt.Errorf("failed to record migration %s: %w", version, err)
 		}
 

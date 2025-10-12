@@ -14,10 +14,12 @@ func SetupRoutes(r *gin.Engine) {
 
 	// Initialize repositories
 	notesRepo := repository.NewNotesRepository(db)
+	financeRepo := repository.NewFinanceRepository(db)
 
 	// Initialize handlers
 	healthHandler := NewHealthHandler()
 	notesHandler := NewNotesHandler(notesRepo)
+	financeHandler := NewFinanceHandler(financeRepo)
 
 	// Health check routes
 	api := r.Group("/api/v1")
@@ -35,6 +37,23 @@ func SetupRoutes(r *gin.Engine) {
 		api.POST("/notes", notesHandler.CreateNote)
 		api.PUT("/notes/:id", notesHandler.UpdateNote)
 		api.DELETE("/notes/:id", notesHandler.DeleteNote)
+
+		// Finance MVP endpoints
+		api.GET("/finance/incomes", financeHandler.ListIncomes)
+		api.POST("/finance/incomes", financeHandler.CreateIncome)
+		api.PUT("/finance/incomes/:id", financeHandler.UpdateIncome)
+		api.DELETE("/finance/incomes/:id", financeHandler.DeleteIncome)
+		api.GET("/finance/expenses", financeHandler.ListExpenses)
+		api.POST("/finance/expenses", financeHandler.CreateExpense)
+		api.PUT("/finance/expenses/:id", financeHandler.UpdateExpense)
+		api.DELETE("/finance/expenses/:id", financeHandler.DeleteExpense)
+		api.POST("/finance/goals", financeHandler.CreateGoal)
+		api.PUT("/finance/goals/:id", financeHandler.UpdateGoal)
+		api.POST("/finance/goals/contributions", financeHandler.CreateGoalContribution)
+		api.GET("/finance/summary", financeHandler.GetMonthlySummary)
+		api.GET("/finance/categories", financeHandler.ListCategories)
+		api.POST("/finance/categories", financeHandler.CreateCategory)
+		api.GET("/finance/goals", financeHandler.ListGoalsWithProgress)
 	}
 
 	// Root health check
