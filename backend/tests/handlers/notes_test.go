@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"finance-management/internal/dto/request"
 	"finance-management/internal/handlers"
 	"finance-management/internal/models"
 	"finance-management/internal/repository"
@@ -108,7 +109,7 @@ func TestCreateNote_Success(t *testing.T) {
 	}
 	r := setupNotesRouter(t, repo)
 
-	body := models.CreateNoteRequest{Title: n.Title, Content: n.Content, Category: n.Category, Tags: n.Tags, IsFavorite: n.IsFavorite}
+	body := request.CreateNoteRequest{Title: n.Title, Content: n.Content, Category: n.Category, Tags: n.Tags, IsFavorite: n.IsFavorite}
 	b, _ := json.Marshal(body)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodPost, "/api/notes", bytes.NewReader(b))
@@ -130,7 +131,7 @@ func TestUpdateNote_Success(t *testing.T) {
 	}
 	r := setupNotesRouter(t, repo)
 
-	body := models.UpdateNoteRequest{Title: &title}
+	body := request.UpdateNoteRequest{Title: &title}
 	b, _ := json.Marshal(body)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodPut, "/api/notes/"+n.ID.String(), bytes.NewReader(b))

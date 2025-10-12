@@ -3,6 +3,7 @@ package handlers
 import (
 	"finance-management/internal/config"
 	"finance-management/internal/repository"
+	"finance-management/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,10 +17,14 @@ func SetupRoutes(r *gin.Engine) {
 	notesRepo := repository.NewNotesRepository(db)
 	financeRepo := repository.NewFinanceRepository(db)
 
+	// Initialize services
+	notesService := services.NewNotesService(notesRepo)
+	financeService := services.NewFinanceService(financeRepo)
+
 	// Initialize handlers
 	healthHandler := NewHealthHandler()
-	notesHandler := NewNotesHandler(notesRepo)
-	financeHandler := NewFinanceHandler(financeRepo)
+	notesHandler := NewNotesHandler(notesService)
+	financeHandler := NewFinanceHandler(financeService)
 
 	// Health check routes
 	api := r.Group("/api/v1")
@@ -29,7 +34,7 @@ func SetupRoutes(r *gin.Engine) {
 	}
 
 	// Notes routes
-	api = r.Group("/api")
+	api = r.Group("/api/v1")
 	{
 		// Notes CRUD operations
 		api.GET("/notes", notesHandler.GetNotes)

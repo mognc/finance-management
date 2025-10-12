@@ -53,67 +53,6 @@ type GoalContribution struct {
 	CreatedAt     time.Time `json:"created_at" gorm:"column:created_at"`
 }
 
-// CreateIncomeRequest for adding income
-type CreateIncomeRequest struct {
-	Source     string    `json:"source"`
-	Amount     float64   `json:"amount" binding:"required"`
-	ReceivedAt time.Time `json:"received_at" binding:"required"`
-}
-
-// UpdateIncomeRequest for editing income
-type UpdateIncomeRequest struct {
-	Source     *string    `json:"source"`
-	Amount     *float64   `json:"amount"`
-	ReceivedAt *time.Time `json:"received_at"`
-}
-
-// CreateExpenseRequest for adding expense
-type CreateExpenseRequest struct {
-	Category    string     `json:"category"`
-	Description string     `json:"description"`
-	Amount      float64    `json:"amount" binding:"required"`
-	SpentAt     time.Time  `json:"spent_at" binding:"required"`
-	GoalID      *uuid.UUID `json:"goal_id"`
-}
-
-// UpdateExpenseRequest for editing expense
-type UpdateExpenseRequest struct {
-	Category    *string     `json:"category"`
-	Description *string     `json:"description"`
-	Amount      *float64    `json:"amount"`
-	SpentAt     *time.Time  `json:"spent_at"`
-	GoalID      **uuid.UUID `json:"goal_id"`
-}
-
-// CreateGoalRequest for creating a goal
-type CreateGoalRequest struct {
-	Name         string     `json:"name" binding:"required"`
-	Description  string     `json:"description"`
-	Category     string     `json:"category"`
-	TargetAmount float64    `json:"target_amount" binding:"required"`
-	TargetDate   *time.Time `json:"target_date"`
-	ParentGoalID *uuid.UUID `json:"parent_goal_id"`
-	IsMainGoal   bool       `json:"is_main_goal"`
-}
-
-// UpdateGoalRequest for editing goal
-type UpdateGoalRequest struct {
-	Name         *string     `json:"name"`
-	Description  *string     `json:"description"`
-	Category     *string     `json:"category"`
-	TargetAmount *float64    `json:"target_amount"`
-	TargetDate   *time.Time  `json:"target_date"`
-	ParentGoalID **uuid.UUID `json:"parent_goal_id"`
-	IsMainGoal   *bool       `json:"is_main_goal"`
-}
-
-// CreateGoalContributionRequest for contributing to a goal
-type CreateGoalContributionRequest struct {
-	GoalID        uuid.UUID `json:"goal_id" binding:"required"`
-	Amount        float64   `json:"amount" binding:"required"`
-	ContributedAt time.Time `json:"contributed_at" binding:"required"`
-}
-
 // GoalCategory represents predefined goal categories
 type GoalCategory struct {
 	ID          uuid.UUID `json:"id" gorm:"type:uuid;primaryKey;column:id"`
@@ -141,14 +80,6 @@ type GoalWithSubgoals struct {
 	Subgoals []Goal `json:"subgoals"`
 }
 
-// CreateGoalExpenseRequest for associating expenses with goals
-type CreateGoalExpenseRequest struct {
-	GoalID      uuid.UUID `json:"goal_id" binding:"required"`
-	ExpenseID   uuid.UUID `json:"expense_id" binding:"required"`
-	Amount      float64   `json:"amount" binding:"required"`
-	Description string    `json:"description"`
-}
-
 // MonthlySummary groups totals for a month
 type MonthlySummary struct {
 	Year              int                   `json:"year"`
@@ -169,10 +100,6 @@ type Category struct {
 	CreatedAt time.Time `json:"created_at" gorm:"column:created_at"`
 }
 
-type CreateCategoryRequest struct {
-	Name string `json:"name" binding:"required"`
-}
-
 // HistoricalSummary represents aggregated financial data for different time periods
 type HistoricalSummary struct {
 	ID           uuid.UUID `json:"id" gorm:"type:uuid;primaryKey;column:id"`
@@ -186,19 +113,4 @@ type HistoricalSummary struct {
 	CategoryData string    `json:"category_data" gorm:"type:text;column:category_data"` // JSON string
 	CreatedAt    time.Time `json:"created_at" gorm:"column:created_at"`
 	UpdatedAt    time.Time `json:"updated_at" gorm:"column:updated_at"`
-}
-
-// HistoricalDataRequest for fetching historical data
-type HistoricalDataRequest struct {
-	PeriodType string `json:"period_type" binding:"required"` // "weekly", "monthly", "yearly"
-	StartDate  string `json:"start_date" binding:"required"`
-	EndDate    string `json:"end_date" binding:"required"`
-}
-
-// PDFReportRequest for generating PDF reports
-type PDFReportRequest struct {
-	PeriodType string `json:"period_type" binding:"required"`
-	StartDate  string `json:"start_date" binding:"required"`
-	EndDate    string `json:"end_date" binding:"required"`
-	Format     string `json:"format"` // "summary", "detailed"
 }

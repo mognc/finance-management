@@ -3,8 +3,9 @@ package handlers
 import (
 	"net/http"
 
-	"finance-management/internal/models"
-	"finance-management/internal/repository"
+	"finance-management/internal/dto/request"
+	"finance-management/internal/errors"
+	"finance-management/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -12,13 +13,13 @@ import (
 
 // NotesHandler handles note-related HTTP requests
 type NotesHandler struct {
-	notesRepo repository.NotesRepositoryInterface
+	notesService *services.NotesService
 }
 
 // NewNotesHandler creates a new notes handler
-func NewNotesHandler(notesRepo repository.NotesRepositoryInterface) *NotesHandler {
+func NewNotesHandler(notesService *services.NotesService) *NotesHandler {
 	return &NotesHandler{
-		notesRepo: notesRepo,
+		notesService: notesService,
 	}
 }
 
@@ -26,31 +27,13 @@ func NewNotesHandler(notesRepo repository.NotesRepositoryInterface) *NotesHandle
 func (h *NotesHandler) GetNotes(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000") // Default system user
 
-	notes, err := h.notesRepo.GetNotesByUserID(userID)
+	notes, err := h.notesService.ListNotes(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to retrieve notes",
-		})
+		errors.HandleError(c, err)
 		return
 	}
 
-	// Convert to response format
-	noteResponses := make([]models.NoteResponse, len(notes))
-	for i, note := range notes {
-		noteResponses[i] = models.NoteResponse{
-			ID:         note.ID,
-			Title:      note.Title,
-			Content:    note.Content,
-			Category:   note.Category,
-			Tags:       note.Tags,
-			IsFavorite: note.IsFavorite,
-			IsArchived: note.IsArchived,
-			CreatedAt:  note.CreatedAt,
-			UpdatedAt:  note.UpdatedAt,
-		}
-	}
-
-	c.JSON(http.StatusOK, noteResponses)
+	c.JSON(http.StatusOK, notes)
 }
 
 // GetNote retrieves a specific note by ID
@@ -60,86 +43,36 @@ func (h *NotesHandler) GetNote(c *gin.Context) {
 	noteIDStr := c.Param("id")
 	noteID, err := uuid.Parse(noteIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid note ID format",
-		})
+		errors.HandleError(c, errors.ErrInvalidInput)
 		return
 	}
 
-	note, err := h.notesRepo.GetNoteByID(noteID, userID)
+	note, err := h.notesService.GetNote(userID, noteID)
 	if err != nil {
-		if err.Error() == "note not found" {
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": "Note not found",
-			})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to retrieve note",
-		})
+		errors.HandleError(c, err)
 		return
 	}
 
-	response := models.NoteResponse{
-		ID:         note.ID,
-		Title:      note.Title,
-		Content:    note.Content,
-		Category:   note.Category,
-		Tags:       note.Tags,
-		IsFavorite: note.IsFavorite,
-		IsArchived: note.IsArchived,
-		CreatedAt:  note.CreatedAt,
-		UpdatedAt:  note.UpdatedAt,
-	}
-
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, note)
 }
 
 // CreateNote creates a new note
 func (h *NotesHandler) CreateNote(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000") // Default system user
 
-	var req models.CreateNoteRequest
+	var req request.CreateNoteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Invalid request body",
-			"details": err.Error(),
-		})
+		errors.HandleValidationError(c, err)
 		return
 	}
 
-	// Create new note
-	note := &models.Note{
-		ID:         uuid.New(),
-		UserID:     userID,
-		Title:      req.Title,
-		Content:    req.Content,
-		Category:   req.Category,
-		Tags:       req.Tags,
-		IsFavorite: req.IsFavorite,
-		IsArchived: false, // New notes are not archived by default
-	}
-
-	if err := h.notesRepo.CreateNote(note); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to create note",
-		})
+	note, err := h.notesService.CreateNote(userID, &req)
+	if err != nil {
+		errors.HandleError(c, err)
 		return
 	}
 
-	response := models.NoteResponse{
-		ID:         note.ID,
-		Title:      note.Title,
-		Content:    note.Content,
-		Category:   note.Category,
-		Tags:       note.Tags,
-		IsFavorite: note.IsFavorite,
-		IsArchived: note.IsArchived,
-		CreatedAt:  note.CreatedAt,
-		UpdatedAt:  note.UpdatedAt,
-	}
-
-	c.JSON(http.StatusCreated, response)
+	c.JSON(http.StatusCreated, note)
 }
 
 // UpdateNote updates an existing note
@@ -149,77 +82,23 @@ func (h *NotesHandler) UpdateNote(c *gin.Context) {
 	noteIDStr := c.Param("id")
 	noteID, err := uuid.Parse(noteIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid note ID format",
-		})
+		errors.HandleError(c, errors.ErrInvalidInput)
 		return
 	}
 
-	var req models.UpdateNoteRequest
+	var req request.UpdateNoteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Invalid request body",
-			"details": err.Error(),
-		})
+		errors.HandleValidationError(c, err)
 		return
 	}
 
-	// Build updates map
-	updates := make(map[string]interface{})
-	if req.Title != nil {
-		updates["title"] = *req.Title
-	}
-	if req.Content != nil {
-		updates["content"] = *req.Content
-	}
-	if req.Category != nil {
-		updates["category"] = *req.Category
-	}
-	if req.Tags != nil {
-		updates["tags"] = *req.Tags
-	}
-	if req.IsFavorite != nil {
-		updates["is_favorite"] = *req.IsFavorite
-	}
-	if req.IsArchived != nil {
-		updates["is_archived"] = *req.IsArchived
-	}
-
-	if err := h.notesRepo.UpdateNote(noteID, userID, updates); err != nil {
-		if err.Error() == "note not found or no changes made" {
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": "Note not found",
-			})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to update note",
-		})
-		return
-	}
-
-	// Retrieve updated note
-	note, err := h.notesRepo.GetNoteByID(noteID, userID)
+	note, err := h.notesService.UpdateNote(userID, noteID, &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to retrieve updated note",
-		})
+		errors.HandleError(c, err)
 		return
 	}
 
-	response := models.NoteResponse{
-		ID:         note.ID,
-		Title:      note.Title,
-		Content:    note.Content,
-		Category:   note.Category,
-		Tags:       note.Tags,
-		IsFavorite: note.IsFavorite,
-		IsArchived: note.IsArchived,
-		CreatedAt:  note.CreatedAt,
-		UpdatedAt:  note.UpdatedAt,
-	}
-
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, note)
 }
 
 // DeleteNote deletes a note
@@ -229,22 +108,12 @@ func (h *NotesHandler) DeleteNote(c *gin.Context) {
 	noteIDStr := c.Param("id")
 	noteID, err := uuid.Parse(noteIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid note ID format",
-		})
+		errors.HandleError(c, errors.ErrInvalidInput)
 		return
 	}
 
-	if err := h.notesRepo.DeleteNote(noteID, userID); err != nil {
-		if err.Error() == "note not found" {
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": "Note not found",
-			})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to delete note",
-		})
+	if err := h.notesService.DeleteNote(userID, noteID); err != nil {
+		errors.HandleError(c, err)
 		return
 	}
 

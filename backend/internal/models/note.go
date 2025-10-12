@@ -20,25 +20,6 @@ type Note struct {
 	UpdatedAt  time.Time `json:"updated_at" gorm:"column:updated_at"`
 }
 
-// CreateNoteRequest represents the request to create a new note
-type CreateNoteRequest struct {
-	Title      string   `json:"title" binding:"required"`
-	Content    string   `json:"content"`
-	Category   string   `json:"category"`
-	Tags       []string `json:"tags"`
-	IsFavorite bool     `json:"is_favorite"`
-}
-
-// UpdateNoteRequest represents the request to update a note
-type UpdateNoteRequest struct {
-	Title      *string   `json:"title"`
-	Content    *string   `json:"content"`
-	Category   *string   `json:"category"`
-	Tags       *[]string `json:"tags"`
-	IsFavorite *bool     `json:"is_favorite"`
-	IsArchived *bool     `json:"is_archived"`
-}
-
 // NoteResponse represents the response for note operations
 type NoteResponse struct {
 	ID         uuid.UUID `json:"id"`

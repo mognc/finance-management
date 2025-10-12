@@ -7,8 +7,10 @@ import (
 	"strconv"
 	"time"
 
+	"finance-management/internal/dto/request"
+	"finance-management/internal/errors"
 	"finance-management/internal/models"
-	"finance-management/internal/repository"
+	"finance-management/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -16,42 +18,37 @@ import (
 
 // FinanceHandler handles finance-related endpoints
 type FinanceHandler struct {
-	repo repository.FinanceRepositoryInterface
+	financeService *services.FinanceService
 }
 
-func NewFinanceHandler(repo repository.FinanceRepositoryInterface) *FinanceHandler {
-	return &FinanceHandler{repo: repo}
+func NewFinanceHandler(financeService *services.FinanceService) *FinanceHandler {
+	return &FinanceHandler{financeService: financeService}
 }
 
 // CreateIncome handles POST /api/finance/incomes
 func (h *FinanceHandler) CreateIncome(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
-	var req models.CreateIncomeRequest
+	var req request.CreateIncomeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request", "details": err.Error()})
+		errors.HandleValidationError(c, err)
 		return
 	}
-	income := &models.Income{
-		ID:         uuid.New(),
-		UserID:     userID,
-		Source:     req.Source,
-		Amount:     req.Amount,
-		ReceivedAt: req.ReceivedAt,
-		CreatedAt:  time.Now().UTC(),
-	}
-	if err := h.repo.CreateIncome(income); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create income"})
+
+	income, err := h.financeService.CreateIncome(userID, &req)
+	if err != nil {
+		errors.HandleError(c, err)
 		return
 	}
+
 	c.JSON(http.StatusCreated, income)
 }
 
 // ListIncomes GET /api/finance/incomes
 func (h *FinanceHandler) ListIncomes(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
-	items, err := h.repo.ListIncomes(userID, 100)
+	items, err := h.financeService.ListIncomes(userID, 100)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list incomes"})
+		errors.HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, items)
@@ -60,34 +57,27 @@ func (h *FinanceHandler) ListIncomes(c *gin.Context) {
 // CreateExpense handles POST /api/finance/expenses
 func (h *FinanceHandler) CreateExpense(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
-	var req models.CreateExpenseRequest
+	var req request.CreateExpenseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request", "details": err.Error()})
+		errors.HandleValidationError(c, err)
 		return
 	}
-	expense := &models.Expense{
-		ID:          uuid.New(),
-		UserID:      userID,
-		Category:    req.Category,
-		Description: req.Description,
-		Amount:      req.Amount,
-		SpentAt:     req.SpentAt,
-		GoalID:      req.GoalID,
-		CreatedAt:   time.Now().UTC(),
-	}
-	if err := h.repo.CreateExpense(expense); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create expense"})
+
+	expense, err := h.financeService.CreateExpense(userID, &req)
+	if err != nil {
+		errors.HandleError(c, err)
 		return
 	}
+
 	c.JSON(http.StatusCreated, expense)
 }
 
 // ListExpenses GET /api/finance/expenses
 func (h *FinanceHandler) ListExpenses(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
-	items, err := h.repo.ListExpenses(userID, 100)
+	items, err := h.financeService.ListExpenses(userID, 100)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list expenses"})
+		errors.HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, items)
@@ -98,28 +88,20 @@ func (h *FinanceHandler) UpdateIncome(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		errors.HandleError(c, errors.ErrInvalidInput)
 		return
 	}
-	var req models.UpdateIncomeRequest
+	var req request.UpdateIncomeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
+		errors.HandleValidationError(c, err)
 		return
 	}
-	updates := map[string]interface{}{}
-	if req.Source != nil {
-		updates["source"] = *req.Source
-	}
-	if req.Amount != nil {
-		updates["amount"] = *req.Amount
-	}
-	if req.ReceivedAt != nil {
-		updates["received_at"] = *req.ReceivedAt
-	}
-	if err := h.repo.UpdateIncome(id, userID, updates); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update"})
+
+	if err := h.financeService.UpdateIncome(userID, id, &req); err != nil {
+		errors.HandleError(c, err)
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
@@ -128,34 +110,20 @@ func (h *FinanceHandler) UpdateExpense(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		errors.HandleError(c, errors.ErrInvalidInput)
 		return
 	}
-	var req models.UpdateExpenseRequest
+	var req request.UpdateExpenseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
+		errors.HandleValidationError(c, err)
 		return
 	}
-	updates := map[string]interface{}{}
-	if req.Category != nil {
-		updates["category"] = *req.Category
-	}
-	if req.Description != nil {
-		updates["description"] = *req.Description
-	}
-	if req.Amount != nil {
-		updates["amount"] = *req.Amount
-	}
-	if req.SpentAt != nil {
-		updates["spent_at"] = *req.SpentAt
-	}
-	if req.GoalID != nil {
-		updates["goal_id"] = req.GoalID
-	}
-	if err := h.repo.UpdateExpense(id, userID, updates); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update"})
+
+	if err := h.financeService.UpdateExpense(userID, id, &req); err != nil {
+		errors.HandleError(c, err)
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
@@ -164,11 +132,11 @@ func (h *FinanceHandler) DeleteIncome(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		errors.HandleError(c, errors.ErrInvalidInput)
 		return
 	}
-	if err := h.repo.DeleteIncome(id, userID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete"})
+	if err := h.financeService.DeleteIncome(userID, id); err != nil {
+		errors.HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
@@ -179,11 +147,11 @@ func (h *FinanceHandler) DeleteExpense(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		errors.HandleError(c, errors.ErrInvalidInput)
 		return
 	}
-	if err := h.repo.DeleteExpense(id, userID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete"})
+	if err := h.financeService.DeleteExpense(userID, id); err != nil {
+		errors.HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
@@ -192,52 +160,37 @@ func (h *FinanceHandler) DeleteExpense(c *gin.Context) {
 // CreateGoal handles POST /api/finance/goals
 func (h *FinanceHandler) CreateGoal(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
-	var req models.CreateGoalRequest
+	var req request.CreateGoalRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request", "details": err.Error()})
+		errors.HandleValidationError(c, err)
 		return
 	}
-	goal := &models.Goal{
-		ID:           uuid.New(),
-		UserID:       userID,
-		Name:         req.Name,
-		Description:  req.Description,
-		Category:     req.Category,
-		TargetAmount: req.TargetAmount,
-		TargetDate:   req.TargetDate,
-		ParentGoalID: req.ParentGoalID,
-		IsMainGoal:   req.IsMainGoal,
-		CreatedAt:    time.Now().UTC(),
-		UpdatedAt:    time.Now().UTC(),
-	}
-	if err := h.repo.CreateGoal(goal); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create goal"})
+
+	goal, err := h.financeService.CreateGoal(userID, &req)
+	if err != nil {
+		errors.HandleError(c, err)
 		return
 	}
+
 	c.JSON(http.StatusCreated, goal)
 }
 
 // CreateGoalContribution handles POST /api/finance/goals/contributions
 func (h *FinanceHandler) CreateGoalContribution(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
-	var req models.CreateGoalContributionRequest
+	var req request.CreateGoalContributionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request", "details": err.Error()})
+		errors.HandleValidationError(c, err)
 		return
 	}
-	contrib := &models.GoalContribution{
-		ID:            uuid.New(),
-		UserID:        userID,
-		GoalID:        req.GoalID,
-		Amount:        req.Amount,
-		ContributedAt: req.ContributedAt,
-		CreatedAt:     time.Now().UTC(),
-	}
-	if err := h.repo.CreateGoalContribution(contrib); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create goal contribution"})
+
+	contribution, err := h.financeService.CreateGoalContribution(userID, &req)
+	if err != nil {
+		errors.HandleError(c, err)
 		return
 	}
-	c.JSON(http.StatusCreated, contrib)
+
+	c.JSON(http.StatusCreated, contribution)
 }
 
 // GetMonthlySummary handles GET /api/finance/summary?year=YYYY&month=M
@@ -252,18 +205,18 @@ func (h *FinanceHandler) GetMonthlySummary(c *gin.Context) {
 	}
 	year, err := strconv.Atoi(yearStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid year"})
+		errors.HandleError(c, errors.ErrInvalidInput)
 		return
 	}
 	month, err := strconv.Atoi(monthStr)
 	if err != nil || month < 1 || month > 12 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid month"})
+		errors.HandleError(c, errors.ErrInvalidInput)
 		return
 	}
 
-	summary, err := h.repo.GetMonthlySummary(userID, year, month)
+	summary, err := h.financeService.GetMonthlySummary(userID, year, month)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to compute summary"})
+		errors.HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, summary)
@@ -272,36 +225,40 @@ func (h *FinanceHandler) GetMonthlySummary(c *gin.Context) {
 // CreateCategory handles POST /api/finance/categories
 func (h *FinanceHandler) CreateCategory(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
-	var req models.CreateCategoryRequest
-	if err := c.ShouldBindJSON(&req); err != nil || req.Name == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+	var req request.CreateCategoryRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		errors.HandleValidationError(c, err)
 		return
 	}
-	cat := &models.Category{ID: uuid.New(), UserID: userID, Name: req.Name, CreatedAt: time.Now().UTC()}
-	if err := h.repo.CreateCategory(cat); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create category"})
+
+	category, err := h.financeService.CreateCategory(userID, &req)
+	if err != nil {
+		errors.HandleError(c, err)
 		return
 	}
-	c.JSON(http.StatusCreated, cat)
+
+	c.JSON(http.StatusCreated, category)
 }
 
 // ListCategories handles GET /api/finance/categories
 func (h *FinanceHandler) ListCategories(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
-	cats, err := h.repo.ListCategories(userID)
+
+	categories, err := h.financeService.ListCategories(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list categories"})
+		errors.HandleError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, cats)
+
+	c.JSON(http.StatusOK, categories)
 }
 
 // ListGoalsWithProgress handles GET /api/finance/goals
 func (h *FinanceHandler) ListGoalsWithProgress(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
-	goals, err := h.repo.ListGoalsWithProgress(userID)
+	goals, err := h.financeService.ListGoalsWithProgress(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list goals"})
+		errors.HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, goals)
@@ -312,40 +269,20 @@ func (h *FinanceHandler) UpdateGoal(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		errors.HandleError(c, errors.ErrInvalidInput)
 		return
 	}
-	var req models.UpdateGoalRequest
+	var req request.UpdateGoalRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
+		errors.HandleValidationError(c, err)
 		return
 	}
-	updates := map[string]interface{}{}
-	if req.Name != nil {
-		updates["name"] = *req.Name
-	}
-	if req.Description != nil {
-		updates["description"] = *req.Description
-	}
-	if req.Category != nil {
-		updates["category"] = *req.Category
-	}
-	if req.TargetAmount != nil {
-		updates["target_amount"] = *req.TargetAmount
-	}
-	if req.TargetDate != nil {
-		updates["target_date"] = *req.TargetDate
-	}
-	if req.ParentGoalID != nil {
-		updates["parent_goal_id"] = req.ParentGoalID
-	}
-	if req.IsMainGoal != nil {
-		updates["is_main_goal"] = *req.IsMainGoal
-	}
-	if err := h.repo.UpdateGoal(id, userID, updates); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update"})
+
+	if err := h.financeService.UpdateGoal(userID, id, &req); err != nil {
+		errors.HandleError(c, err)
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
@@ -354,11 +291,11 @@ func (h *FinanceHandler) DeleteGoal(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		errors.HandleError(c, errors.ErrInvalidInput)
 		return
 	}
-	if err := h.repo.DeleteGoal(id, userID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete"})
+	if err := h.financeService.DeleteGoal(userID, id); err != nil {
+		errors.HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
@@ -372,67 +309,48 @@ func (h *FinanceHandler) GetHistoricalData(c *gin.Context) {
 	endDateStr := c.Query("end_date")
 
 	if periodType == "" || startDateStr == "" || endDateStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "period_type, start_date, and end_date are required"})
+		errors.HandleError(c, errors.ErrInvalidInput)
 		return
 	}
 
 	startDate, err := time.Parse("2006-01-02", startDateStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start_date format (YYYY-MM-DD)"})
+		errors.HandleError(c, errors.ErrInvalidInput)
 		return
 	}
 
 	endDate, err := time.Parse("2006-01-02", endDateStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid end_date format (YYYY-MM-DD)"})
+		errors.HandleError(c, errors.ErrInvalidInput)
 		return
 	}
 
 	if periodType != "weekly" && periodType != "monthly" && periodType != "yearly" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "period_type must be weekly, monthly, or yearly"})
+		errors.HandleError(c, errors.ErrInvalidInput)
 		return
 	}
 
-	summaries, err := h.repo.GetHistoricalSummaries(userID, periodType, startDate, endDate)
+	historicalData, err := h.financeService.GetHistoricalData(userID, periodType, startDate, endDate)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get historical data"})
+		errors.HandleError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, summaries)
+	c.JSON(http.StatusOK, historicalData)
 }
 
 // GenerateHistoricalSummary handles POST /api/finance/historical/generate
 func (h *FinanceHandler) GenerateHistoricalSummary(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
-	var req models.HistoricalDataRequest
+	var req request.HistoricalDataRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request", "details": err.Error()})
+		errors.HandleValidationError(c, err)
 		return
 	}
 
-	// Parse date strings
-	startDate, err := time.Parse("2006-01-02", req.StartDate)
+	summary, err := h.financeService.GenerateHistoricalSummary(userID, &req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start_date format (YYYY-MM-DD)"})
-		return
-	}
-
-	endDate, err := time.Parse("2006-01-02", req.EndDate)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid end_date format (YYYY-MM-DD)"})
-		return
-	}
-
-	summary, err := h.repo.GetHistoricalDataForPeriod(userID, req.PeriodType, startDate, endDate)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate historical summary"})
-		return
-	}
-
-	// Store the summary
-	if err := h.repo.CreateHistoricalSummary(summary); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to store historical summary"})
+		errors.HandleError(c, err)
 		return
 	}
 
@@ -442,38 +360,19 @@ func (h *FinanceHandler) GenerateHistoricalSummary(c *gin.Context) {
 // GeneratePDFReport handles POST /api/finance/reports/pdf
 func (h *FinanceHandler) GeneratePDFReport(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
-	var req models.PDFReportRequest
+	var req request.PDFReportRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request", "details": err.Error()})
+		errors.HandleValidationError(c, err)
 		return
 	}
 
-	// Parse date strings
-	startDate, err := time.Parse("2006-01-02", req.StartDate)
+	htmlContent, err := h.financeService.GeneratePDFReport(userID, &req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start_date format (YYYY-MM-DD)"})
+		errors.HandleError(c, err)
 		return
 	}
 
-	endDate, err := time.Parse("2006-01-02", req.EndDate)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid end_date format (YYYY-MM-DD)"})
-		return
-	}
-
-	// Get historical data for the period
-	summary, err := h.repo.GetHistoricalDataForPeriod(userID, req.PeriodType, startDate, endDate)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get data for PDF report"})
-		return
-	}
-
-	// Generate HTML content for the PDF
-	htmlContent := h.generateHTMLReport(summary, req.Format)
-
-	// For now, return the HTML content as a simple response
-	// In a production environment, you would use a library like wkhtmltopdf
-	// or a Go PDF library to convert HTML to PDF
+	// Return HTML content for PDF generation
 	c.Header("Content-Type", "text/html")
 	c.String(http.StatusOK, htmlContent)
 }
@@ -553,46 +452,43 @@ func (h *FinanceHandler) generateHTMLReport(summary *models.HistoricalSummary, f
 
 // ListGoalCategories handles GET /api/finance/goals/categories
 func (h *FinanceHandler) ListGoalCategories(c *gin.Context) {
-	categories, err := h.repo.ListGoalCategories()
+	categories, err := h.financeService.ListGoalCategories()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list goal categories"})
+		errors.HandleError(c, err)
 		return
 	}
+
 	c.JSON(http.StatusOK, categories)
 }
 
 // ListMainGoalsWithSubgoals handles GET /api/finance/goals/hierarchical
 func (h *FinanceHandler) ListMainGoalsWithSubgoals(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
-	goals, err := h.repo.ListMainGoalsWithSubgoals(userID)
+
+	goals, err := h.financeService.ListMainGoalsWithSubgoals(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list hierarchical goals"})
+		errors.HandleError(c, err)
 		return
 	}
+
 	c.JSON(http.StatusOK, goals)
 }
 
 // CreateGoalExpense handles POST /api/finance/goals/expenses
 func (h *FinanceHandler) CreateGoalExpense(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
-	var req models.CreateGoalExpenseRequest
+	var req request.CreateGoalExpenseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request", "details": err.Error()})
+		errors.HandleValidationError(c, err)
 		return
 	}
-	goalExpense := &models.GoalExpense{
-		ID:          uuid.New(),
-		UserID:      userID,
-		GoalID:      req.GoalID,
-		ExpenseID:   req.ExpenseID,
-		Amount:      req.Amount,
-		Description: req.Description,
-		CreatedAt:   time.Now().UTC(),
-	}
-	if err := h.repo.CreateGoalExpense(goalExpense); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create goal expense"})
+
+	goalExpense, err := h.financeService.CreateGoalExpense(userID, &req)
+	if err != nil {
+		errors.HandleError(c, err)
 		return
 	}
+
 	c.JSON(http.StatusCreated, goalExpense)
 }
 
@@ -601,13 +497,15 @@ func (h *FinanceHandler) ListGoalExpenses(c *gin.Context) {
 	userID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
 	goalID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid goal id"})
+		errors.HandleError(c, errors.ErrInvalidInput)
 		return
 	}
-	expenses, err := h.repo.ListGoalExpenses(userID, goalID)
+
+	expenses, err := h.financeService.ListGoalExpenses(userID, goalID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list goal expenses"})
+		errors.HandleError(c, err)
 		return
 	}
+
 	c.JSON(http.StatusOK, expenses)
 }
