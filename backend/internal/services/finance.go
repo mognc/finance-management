@@ -706,13 +706,13 @@ func (s *FinanceService) GeneratePDFReport(userID uuid.UUID, req *request.PDFRep
 	}
 
 	// Generate HTML content for the PDF
-	htmlContent := s.generateHTMLReport(summary, req.Format)
+	htmlContent := s.generateHTMLReport(summary)
 
 	return htmlContent, nil
 }
 
 // generateHTMLReport creates HTML content for the financial report
-func (s *FinanceService) generateHTMLReport(summary *models.HistoricalSummary, format string) string {
+func (s *FinanceService) generateHTMLReport(summary *models.HistoricalSummary) string {
 	// This is a simplified HTML generation - in production, you'd use a proper template engine
 	html := `
 <!DOCTYPE html>

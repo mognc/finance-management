@@ -1,15 +1,12 @@
 package handlers
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
 	"finance-management/internal/dto/request"
 	"finance-management/internal/errors"
-	"finance-management/internal/models"
 	"finance-management/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -375,79 +372,6 @@ func (h *FinanceHandler) GeneratePDFReport(c *gin.Context) {
 	// Return HTML content for PDF generation
 	c.Header("Content-Type", "text/html")
 	c.String(http.StatusOK, htmlContent)
-}
-
-// generateHTMLReport creates HTML content for the financial report
-func (h *FinanceHandler) generateHTMLReport(summary *models.HistoricalSummary, format string) string {
-	html := `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Financial Report</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .summary { background: #f5f5f5; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
-        .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; }
-        .summary-item.total { font-weight: bold; font-size: 1.2em; border-top: 2px solid #333; padding-top: 10px; }
-        .category-breakdown { margin-top: 20px; }
-        .category-item { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .positive { color: green; }
-        .negative { color: red; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Financial Report</h1>
-        <p>Period: ` + summary.PeriodStart.Format("2006-01-02") + " to " + summary.PeriodEnd.Format("2006-01-02") + `</p>
-        <p>Type: ` + summary.PeriodType + `</p>
-    </div>
-    
-    <div class="summary">
-        <h2>Summary</h2>
-        <div class="summary-item">
-            <span>Total Income:</span>
-            <span class="positive">$` + fmt.Sprintf("%.2f", summary.TotalIncome) + `</span>
-        </div>
-        <div class="summary-item">
-            <span>Total Expenses:</span>
-            <span class="negative">$` + fmt.Sprintf("%.2f", summary.TotalExpense) + `</span>
-        </div>
-        <div class="summary-item total">
-            <span>Net Savings:</span>
-            <span class="` + func() string {
-		if summary.TotalSavings >= 0 {
-			return "positive"
-		} else {
-			return "negative"
-		}
-	}() + `">$` + fmt.Sprintf("%.2f", summary.TotalSavings) + `</span>
-        </div>
-    </div>
-    
-    <div class="category-breakdown">
-        <h2>Expense Categories</h2>`
-
-	// Parse category data if available
-	if summary.CategoryData != "" {
-		var categoryData map[string]float64
-		if err := json.Unmarshal([]byte(summary.CategoryData), &categoryData); err == nil {
-			for category, amount := range categoryData {
-				html += `
-        <div class="category-item">
-            <span>` + category + `:</span>
-            <span>$` + fmt.Sprintf("%.2f", amount) + `</span>
-        </div>`
-			}
-		}
-	}
-
-	html += `
-    </div>
-</body>
-</html>`
-
-	return html
 }
 
 // ListGoalCategories handles GET /api/finance/goals/categories
