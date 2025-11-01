@@ -19,6 +19,27 @@ COPY . .
 # Build the application
 RUN go build -mod=mod -o main ./cmd/api
 
+# Migration stage
+FROM golang:1.25-alpine AS migration
+
+# Set working directory
+WORKDIR /app
+
+# Copy go mod files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Build migration binary
+RUN go build -mod=mod -o migrate ./cmd/migrate
+
+# Run migrations
+CMD ["./migrate"]
+
 # Development stage
 FROM golang:1.25-alpine AS development
 

@@ -1,16 +1,15 @@
 package config
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 
-	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 // DB is the global database connection
-var DB *sqlx.DB
+var DB *gorm.DB
 
 // InitDatabase initializes the database connection
 func InitDatabase() error {
@@ -18,19 +17,13 @@ func InitDatabase() error {
 
 	dsn := config.GetDSN()
 
-	// Open database connection
-	db, err := sql.Open("postgres", dsn)
+	// Open GORM database connection
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
 
-	// Test the connection
-	if err := db.Ping(); err != nil {
-		return fmt.Errorf("failed to ping database: %w", err)
-	}
-
-	// Wrap with sqlx for better functionality
-	DB = sqlx.NewDb(db, "postgres")
+	DB = db
 
 	log.Println("✅ Database connection established successfully")
 	return nil
@@ -39,12 +32,17 @@ func InitDatabase() error {
 // CloseDatabase closes the database connection
 func CloseDatabase() error {
 	if DB != nil {
-		return DB.Close()
+		sqlDB, err := DB.DB()
+		if err != nil {
+			return fmt.Errorf("failed to get underlying sql.DB: %w", err)
+		}
+		if err := sqlDB.Close(); err != nil {
+			return fmt.Errorf("failed to close database connection: %w", err)
+		}
+		log.Println("✅ Database connection closed successfully")
 	}
 	return nil
 }
 
 // GetDB returns the database connection
-func GetDB() *sqlx.DB {
-	return DB
-}
+func GetDB() *gorm.DB { return DB }

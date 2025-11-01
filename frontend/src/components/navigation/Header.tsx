@@ -22,10 +22,10 @@ export default function Header({ className = '' }: HeaderProps) {
 
   return (
     <header 
-      className={`bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 ${className}`}
+      className={`bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16 ${className}`}
       role="banner"
     >
-      <div className="flex items-center justify-between">
+      <div className="h-full flex items-center justify-between px-6">
         <div className="flex items-center space-x-4">
           {/* Sidebar Toggle Button */}
           <button

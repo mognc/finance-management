@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { notesApi } from '@/lib/api/notes';
-import type { Note, NoteCategory } from '@/types/notes';
+import { useApi } from '@/hooks/use-api';
+import type { Note } from '@/types/notes';
 import MainLayout from '@/components/layout/MainLayout';
 import NoteHeader from '@/components/notes/NoteHeader';
 import NoteForm from '@/components/notes/NoteForm';
@@ -17,47 +18,52 @@ export default function NoteEditorPage() {
   const [note, setNote] = useState<Note | null>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [category, setCategory] = useState<NoteCategory>('other');
-  const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [category, setCategory] = useState('general');
+  const [tags, setTags] = useState<string[]>([]);
+  const [is_favorite, setIsFavorite] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+
+  const { data: noteData, loading: isLoading, execute: loadNote } = useApi<Note>();
+  const { loading: isSaving, execute: saveNote } = useApi({
+    successMessage: 'Note updated successfully',
+    showErrorMessage: true,
+  });
+  const { execute: deleteNote } = useApi({
+    successMessage: 'Note deleted successfully',
+    showErrorMessage: true,
+  });
 
   // Load note data
   useEffect(() => {
-    const loadNote = async () => {
-      try {
-        const loadedNote = await notesApi.getNote(noteId);
-        if (!loadedNote) {
-          router.push('/notes');
-          return;
-        }
-        
-        setNote(loadedNote);
-        setTitle(loadedNote.title);
-        setContent(loadedNote.content);
-        setCategory(loadedNote.category);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error loading note:', error);
-        router.push('/notes');
-      }
-    };
-
     if (noteId) {
-      loadNote();
+      loadNote(() => notesApi.getNote(noteId));
     }
-  }, [noteId, router]);
+  }, [noteId, loadNote]);
+
+  // Update form when note data loads
+  useEffect(() => {
+    if (noteData) {
+      setNote(noteData);
+      setTitle(noteData.title);
+      setContent(noteData.content);
+      setCategory(noteData.category);
+      setTags(noteData.tags || []);
+      setIsFavorite(noteData.is_favorite);
+    }
+  }, [noteData]);
 
   // Track changes
   useEffect(() => {
-    if (!isLoading && note) {
+    if (note) {
       setHasChanges(
         title !== note.title ||
         content !== note.content ||
-        category !== note.category
+        category !== note.category ||
+        JSON.stringify(tags) !== JSON.stringify(note.tags || []) ||
+        is_favorite !== note.is_favorite
       );
     }
-  }, [title, content, category, isLoading, note]);
+  }, [title, content, category, tags, is_favorite, note]);
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -65,24 +71,15 @@ export default function NoteEditorPage() {
       return;
     }
 
-    setIsSaving(true);
+    await saveNote(() => notesApi.updateNote(noteId, {
+      title: title.trim(),
+      content,
+      category,
+      tags,
+      is_favorite,
+    }));
     
-    try {
-      const updatedNote = await notesApi.updateNote({
-        id: noteId,
-        title: title.trim(),
-        content,
-        category,
-      });
-      
-      setNote(updatedNote);
-      setHasChanges(false);
-    } catch (error) {
-      console.error('Error saving note:', error);
-      alert('Failed to save note. Please try again.');
-    } finally {
-      setIsSaving(false);
-    }
+    setHasChanges(false);
   };
 
   const handleDelete = async () => {
@@ -90,13 +87,8 @@ export default function NoteEditorPage() {
       return;
     }
 
-    try {
-      await notesApi.deleteNote(noteId);
-      router.push('/notes');
-    } catch (error) {
-      console.error('Error deleting note:', error);
-      alert('Failed to delete note. Please try again.');
-    }
+    await deleteNote(() => notesApi.deleteNote(noteId));
+    router.push('/notes');
   };
 
 
@@ -119,7 +111,7 @@ export default function NoteEditorPage() {
       <div className="p-6 max-w-4xl mx-auto">
         <NoteHeader
           isEditing={true}
-          {...(note && { lastUpdated: formatDateLong(note.updatedAt) })}
+          {...(note && { lastUpdated: formatDateLong(note.updated_at) })}
           hasChanges={hasChanges}
           isSaving={isSaving}
           canSave={!!title.trim() && hasChanges}
@@ -131,9 +123,13 @@ export default function NoteEditorPage() {
           title={title}
           content={content}
           category={category}
+          tags={tags}
+          is_favorite={is_favorite}
           onTitleChange={setTitle}
           onContentChange={setContent}
           onCategoryChange={setCategory}
+          onTagsChange={setTags}
+          onFavoriteChange={setIsFavorite}
           isEditing={true}
         />
       </div>
