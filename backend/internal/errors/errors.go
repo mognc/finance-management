@@ -65,38 +65,15 @@ func WrapWithDetails(err error, code int, message, details string) *AppError {
 // Predefined error types
 var (
 	// Validation errors (400)
-	ErrInvalidInput     = New(http.StatusBadRequest, "Invalid input provided")
-	ErrMissingField     = New(http.StatusBadRequest, "Required field is missing")
-	ErrInvalidFormat    = New(http.StatusBadRequest, "Invalid format provided")
-	ErrValidationFailed = New(http.StatusBadRequest, "Validation failed")
-
-	// Authentication errors (401)
-	ErrUnauthorized = New(http.StatusUnauthorized, "Unauthorized access")
-	ErrInvalidToken = New(http.StatusUnauthorized, "Invalid or expired token")
-
-	// Authorization errors (403)
-	ErrForbidden = New(http.StatusForbidden, "Access forbidden")
+	ErrInvalidInput = New(http.StatusBadRequest, "Invalid input provided")
+	ErrMissingField = New(http.StatusBadRequest, "Required field is missing")
 
 	// Not found errors (404)
-	ErrNotFound        = New(http.StatusNotFound, "Resource not found")
-	ErrUserNotFound    = New(http.StatusNotFound, "User not found")
-	ErrNoteNotFound    = New(http.StatusNotFound, "Note not found")
-	ErrGoalNotFound    = New(http.StatusNotFound, "Goal not found")
-	ErrIncomeNotFound  = New(http.StatusNotFound, "Income not found")
-	ErrExpenseNotFound = New(http.StatusNotFound, "Expense not found")
-
-	// Conflict errors (409)
-	ErrAlreadyExists  = New(http.StatusConflict, "Resource already exists")
-	ErrDuplicateEntry = New(http.StatusConflict, "Duplicate entry")
+	ErrNoteNotFound = New(http.StatusNotFound, "Note not found")
 
 	// Server errors (500)
-	ErrInternalServer  = New(http.StatusInternalServerError, "Internal server error")
-	ErrDatabaseError   = New(http.StatusInternalServerError, "Database operation failed")
-	ErrExternalService = New(http.StatusInternalServerError, "External service error")
+	ErrDatabaseError = New(http.StatusInternalServerError, "Database operation failed")
 
 	// Business logic errors
-	ErrInsufficientFunds = New(http.StatusBadRequest, "Insufficient funds")
-	ErrInvalidAmount     = New(http.StatusBadRequest, "Invalid amount")
-	ErrGoalTargetReached = New(http.StatusBadRequest, "Goal target already reached")
-	ErrInvalidDateRange  = New(http.StatusBadRequest, "Invalid date range")
+	ErrInvalidAmount = New(http.StatusBadRequest, "Invalid amount")
 )
