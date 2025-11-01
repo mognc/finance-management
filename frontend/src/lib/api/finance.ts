@@ -73,17 +73,6 @@ export interface GoalExpensePayload {
   description?: string;
 }
 
-export interface MonthlySummaryDTO {
-  year: number;
-  month: number;
-  total_income: number;
-  total_expenses: number;
-  total_savings: number;
-  category_breakdown: Record<string, number>;
-  goal_spending: Record<string, number>;
-  goal_contributions: Record<string, number>;
-}
-
 export const financeApi = {
   createIncome: (payload: IncomePayload) =>
     apiRequest(() => apiClient.post('/api/finance/incomes', payload)),
@@ -108,14 +97,6 @@ export const financeApi = {
   contributeToGoal: (payload: GoalContributionPayload) =>
     apiRequest(() => apiClient.post('/api/finance/goals/contributions', payload)),
 
-  getMonthlySummary: (year?: number, month?: number) => {
-    const params = new URLSearchParams();
-    if (year) params.set('year', String(year));
-    if (month) params.set('month', String(month));
-    const q = params.toString();
-    const url = q ? `/api/finance/summary?${q}` : '/api/finance/summary';
-    return apiRequest<MonthlySummaryDTO>(() => apiClient.get(url));
-  },
   // Categories
   listCategories: () => apiRequest(() => apiClient.get('/api/finance/categories')),
   createCategory: (name: string) => apiRequest(() => apiClient.post('/api/finance/categories', { name })),

@@ -2,4 +2,3 @@
 export { apiClient, apiRequest, checkApiHealth } from './client';
 export { notesApi } from './notes';
 export { financeApi } from './finance';
-export type { MonthlySummaryDTO, HistoricalSummaryDTO, HistoricalDataRequest, PDFReportRequest } from './finance';
