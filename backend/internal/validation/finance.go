@@ -4,22 +4,12 @@ import (
 	"time"
 
 	"finance-management/internal/errors"
-
-	"github.com/google/uuid"
 )
 
 // ValidateAmount validates that an amount is positive
 func ValidateAmount(amount float64) error {
 	if amount <= 0 {
 		return errors.ErrInvalidAmount
-	}
-	return nil
-}
-
-// ValidateDateRange validates that start date is before end date
-func ValidateDateRange(startDate, endDate time.Time) error {
-	if startDate.After(endDate) {
-		return errors.ErrInvalidDateRange
 	}
 	return nil
 }
@@ -41,58 +31,6 @@ func ValidateGoalDate(targetDate time.Time) error {
 			"Target date cannot be in the past",
 		)
 	}
-	return nil
-}
-
-// ValidateUUID validates that a string is a valid UUID
-func ValidateUUID(id string) error {
-	if _, err := uuid.Parse(id); err != nil {
-		return errors.WrapWithDetails(
-			err,
-			errors.ErrInvalidInput.Code,
-			"Invalid ID format",
-			"ID must be a valid UUID",
-		)
-	}
-	return nil
-}
-
-// ValidatePeriodType validates period type for historical data
-func ValidatePeriodType(periodType string) error {
-	validTypes := map[string]bool{
-		"weekly":  true,
-		"monthly": true,
-		"yearly":  true,
-	}
-
-	if !validTypes[periodType] {
-		return errors.NewWithDetails(
-			errors.ErrInvalidInput.Code,
-			"Invalid period type",
-			"Period type must be one of: weekly, monthly, yearly",
-		)
-	}
-	return nil
-}
-
-// ValidateCategoryName validates category name
-func ValidateCategoryName(name string) error {
-	if len(name) == 0 {
-		return errors.NewWithDetails(
-			errors.ErrMissingField.Code,
-			"Category name is required",
-			"Category name cannot be empty",
-		)
-	}
-
-	if len(name) > 100 {
-		return errors.NewWithDetails(
-			errors.ErrInvalidInput.Code,
-			"Category name too long",
-			"Category name must be 100 characters or less",
-		)
-	}
-
 	return nil
 }
 
