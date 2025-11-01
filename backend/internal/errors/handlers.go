@@ -40,28 +40,3 @@ func HandleError(c *gin.Context, err error) {
 func HandleValidationError(c *gin.Context, err error) {
 	HandleError(c, WrapWithDetails(err, http.StatusBadRequest, "Validation failed", err.Error()))
 }
-
-// HandleNotFoundError handles not found errors
-func HandleNotFoundError(c *gin.Context, resource string) {
-	HandleError(c, NewWithDetails(http.StatusNotFound, "Resource not found", resource))
-}
-
-// HandleUnauthorizedError handles unauthorized access errors
-func HandleUnauthorizedError(c *gin.Context) {
-	HandleError(c, ErrUnauthorized)
-}
-
-// HandleForbiddenError handles forbidden access errors
-func HandleForbiddenError(c *gin.Context) {
-	HandleError(c, ErrForbidden)
-}
-
-// HandleInternalServerError handles internal server errors
-func HandleInternalServerError(c *gin.Context, err error) {
-	HandleError(c, Wrap(err, http.StatusInternalServerError, "Internal server error"))
-}
-
-// HandleDatabaseError handles database errors
-func HandleDatabaseError(c *gin.Context, err error) {
-	HandleError(c, Wrap(err, http.StatusInternalServerError, "Database operation failed"))
-}

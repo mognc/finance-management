@@ -100,17 +100,3 @@ var (
 	ErrGoalTargetReached = New(http.StatusBadRequest, "Goal target already reached")
 	ErrInvalidDateRange  = New(http.StatusBadRequest, "Invalid date range")
 )
-
-// IsAppError checks if an error is an AppError
-func IsAppError(err error) bool {
-	_, ok := err.(*AppError)
-	return ok
-}
-
-// GetAppError extracts AppError from error
-func GetAppError(err error) *AppError {
-	if appErr, ok := err.(*AppError); ok {
-		return appErr
-	}
-	return Wrap(err, http.StatusInternalServerError, "Unknown error")
-}
