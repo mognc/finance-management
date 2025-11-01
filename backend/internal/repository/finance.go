@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"encoding/json"
 	"time"
 
 	"finance-management/internal/models"
@@ -33,10 +32,6 @@ type FinanceRepositoryInterface interface {
 	ListMainGoalsWithSubgoals(userID uuid.UUID) ([]models.GoalWithSubgoals, error)
 	CreateGoalExpense(goalExpense *models.GoalExpense) error
 	ListGoalExpenses(userID uuid.UUID, goalID uuid.UUID) ([]models.GoalExpense, error)
-	// Historical data methods
-	CreateHistoricalSummary(summary *models.HistoricalSummary) error
-	GetHistoricalSummaries(userID uuid.UUID, periodType string, startDate, endDate time.Time) ([]models.HistoricalSummary, error)
-	GetHistoricalDataForPeriod(userID uuid.UUID, periodType string, startDate, endDate time.Time) (*models.HistoricalSummary, error)
 }
 
 type FinanceRepository struct {
@@ -291,87 +286,6 @@ func (r *FinanceRepository) GetMonthlySummary(userID uuid.UUID, year int, month 
 
 	// Define savings as total contributions for now (can evolve later)
 	summary.TotalSavings = totalContrib
-
-	return summary, nil
-}
-
-// CreateHistoricalSummary stores a historical summary
-func (r *FinanceRepository) CreateHistoricalSummary(summary *models.HistoricalSummary) error {
-	return r.db.Create(summary).Error
-}
-
-// GetHistoricalSummaries retrieves historical summaries for a given period
-func (r *FinanceRepository) GetHistoricalSummaries(userID uuid.UUID, periodType string, startDate, endDate time.Time) ([]models.HistoricalSummary, error) {
-	var summaries []models.HistoricalSummary
-	err := r.db.Where("user_id = ? AND period_type = ? AND period_start >= ? AND period_end <= ?",
-		userID, periodType, startDate, endDate).
-		Order("period_start DESC").
-		Find(&summaries).Error
-	return summaries, err
-}
-
-// GetHistoricalDataForPeriod generates historical data for a specific period
-func (r *FinanceRepository) GetHistoricalDataForPeriod(userID uuid.UUID, periodType string, startDate, endDate time.Time) (*models.HistoricalSummary, error) {
-	// Calculate totals for the period
-	var totalIncome, totalExpense float64
-
-	// Get total income for the period
-	if err := r.db.Model(&models.Income{}).
-		Where("user_id = ? AND received_at >= ? AND received_at <= ?", userID, startDate, endDate).
-		Select("COALESCE(SUM(amount), 0)").
-		Scan(&totalIncome).Error; err != nil {
-		return nil, err
-	}
-
-	// Get total expenses for the period
-	if err := r.db.Model(&models.Expense{}).
-		Where("user_id = ? AND spent_at >= ? AND spent_at <= ?", userID, startDate, endDate).
-		Select("COALESCE(SUM(amount), 0)").
-		Scan(&totalExpense).Error; err != nil {
-		return nil, err
-	}
-
-	// Get category breakdown
-	type catRow struct {
-		Category string
-		Total    float64
-	}
-	var catRows []catRow
-	if err := r.db.Model(&models.Expense{}).
-		Where("user_id = ? AND spent_at >= ? AND spent_at <= ?", userID, startDate, endDate).
-		Select("category, COALESCE(SUM(amount), 0) as total").
-		Group("category").
-		Scan(&catRows).Error; err != nil {
-		return nil, err
-	}
-
-	// Convert category data to JSON string
-	categoryData := make(map[string]float64)
-	for _, row := range catRows {
-		categoryData[row.Category] = row.Total
-	}
-
-	// Create historical summary
-	summary := &models.HistoricalSummary{
-		ID:           uuid.New(),
-		UserID:       userID,
-		PeriodType:   periodType,
-		PeriodStart:  startDate,
-		PeriodEnd:    endDate,
-		TotalIncome:  totalIncome,
-		TotalExpense: totalExpense,
-		TotalSavings: totalIncome - totalExpense,
-		CategoryData: "", // Will be set to JSON string
-		CreatedAt:    time.Now().UTC(),
-		UpdatedAt:    time.Now().UTC(),
-	}
-
-	// Convert category data to JSON
-	if len(categoryData) > 0 {
-		if jsonData, err := json.Marshal(categoryData); err == nil {
-			summary.CategoryData = string(jsonData)
-		}
-	}
 
 	return summary, nil
 }

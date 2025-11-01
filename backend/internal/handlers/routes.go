@@ -66,11 +66,6 @@ func SetupRoutes(r *gin.Engine) {
 		api.GET("/finance/goals/hierarchical", financeHandler.ListMainGoalsWithSubgoals)
 		api.POST("/finance/goals/expenses", financeHandler.CreateGoalExpense)
 		api.GET("/finance/goals/:id/expenses", financeHandler.ListGoalExpenses)
-
-		// Historical data and reporting endpoints
-		api.GET("/finance/historical", financeHandler.GetHistoricalData)
-		api.POST("/finance/historical/generate", financeHandler.GenerateHistoricalSummary)
-		api.POST("/finance/reports/pdf", financeHandler.GeneratePDFReport)
 	}
 
 	// Root health check
