@@ -84,33 +84,6 @@ export interface MonthlySummaryDTO {
   goal_contributions: Record<string, number>;
 }
 
-export interface HistoricalSummaryDTO {
-  id: string;
-  user_id: string;
-  period_type: 'weekly' | 'monthly' | 'yearly';
-  period_start: string;
-  period_end: string;
-  total_income: number;
-  total_expense: number;
-  total_savings: number;
-  category_data: string; // JSON string
-  created_at: string;
-  updated_at: string;
-}
-
-export interface HistoricalDataRequest {
-  period_type: 'weekly' | 'monthly' | 'yearly';
-  start_date: string;
-  end_date: string;
-}
-
-export interface PDFReportRequest {
-  period_type: 'weekly' | 'monthly' | 'yearly';
-  start_date: string;
-  end_date: string;
-  format?: 'summary' | 'detailed';
-}
-
 export const financeApi = {
   createIncome: (payload: IncomePayload) =>
     apiRequest(() => apiClient.post('/api/finance/incomes', payload)),
@@ -156,23 +129,6 @@ export const financeApi = {
     apiRequest(() => apiClient.post('/api/finance/goals/expenses', payload)),
   listGoalExpenses: (goalId: string) =>
     apiRequest(() => apiClient.get(`/api/finance/goals/${goalId}/expenses`)),
-  
-  // Historical data
-  getHistoricalData: (periodType: string, startDate: string, endDate: string) => {
-    const params = new URLSearchParams({
-      period_type: periodType,
-      start_date: startDate,
-      end_date: endDate
-    });
-    return apiRequest<HistoricalSummaryDTO[]>(() => apiClient.get(`/api/finance/historical?${params.toString()}`));
-  },
-  
-  generateHistoricalSummary: (payload: HistoricalDataRequest) =>
-    apiRequest<HistoricalSummaryDTO>(() => apiClient.post('/api/finance/historical/generate', payload)),
-  
-  // PDF Reports
-  generatePDFReport: (payload: PDFReportRequest) =>
-    apiRequest(() => apiClient.post('/api/finance/reports/pdf', payload)),
 };
 
 

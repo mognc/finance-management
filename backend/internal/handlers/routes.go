@@ -27,14 +27,14 @@ func SetupRoutes(r *gin.Engine) {
 	financeHandler := NewFinanceHandler(financeService)
 
 	// Health check routes
-	api := r.Group("/api/v1")
+	api := r.Group("/api")
 	{
 		api.GET("/health", healthHandler.Health)
 		api.GET("/health/db", healthHandler.DatabaseHealth)
 	}
 
 	// Notes routes
-	api = r.Group("/api/v1")
+	api = r.Group("/api")
 	{
 		// Notes CRUD operations
 		api.GET("/notes", notesHandler.GetNotes)
