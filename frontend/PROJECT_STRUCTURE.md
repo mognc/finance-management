@@ -101,24 +101,8 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
 
-## 🎨 Styling
-
-The project uses Tailwind CSS v4 with:
-- Custom color scheme with dark mode support
-- Geist fonts (Sans & Mono)
-- Responsive design utilities
-- Component-based styling approach
-
 ## 🔄 State Management
 
 - **React Query** for server state
 - **Local Storage** hook for client state
 - **Zustand** (can be added if needed)
-
-## 📱 Responsive Design
-
-Built with mobile-first approach using Tailwind's responsive utilities:
-- `sm:` - Small screens (640px+)
-- `md:` - Medium screens (768px+)
-- `lg:` - Large screens (1024px+)
-- `xl:` - Extra large screens (1280px+)

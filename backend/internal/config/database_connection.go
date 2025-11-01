@@ -30,7 +30,19 @@ func InitDatabase() error {
 }
 
 // CloseDatabase closes the database connection
-func CloseDatabase() error { return nil }
+func CloseDatabase() error {
+	if DB != nil {
+		sqlDB, err := DB.DB()
+		if err != nil {
+			return fmt.Errorf("failed to get underlying sql.DB: %w", err)
+		}
+		if err := sqlDB.Close(); err != nil {
+			return fmt.Errorf("failed to close database connection: %w", err)
+		}
+		log.Println("✅ Database connection closed successfully")
+	}
+	return nil
+}
 
 // GetDB returns the database connection
 func GetDB() *gorm.DB { return DB }

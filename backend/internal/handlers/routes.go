@@ -3,6 +3,7 @@ package handlers
 import (
 	"finance-management/internal/config"
 	"finance-management/internal/repository"
+	"finance-management/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,13 +17,17 @@ func SetupRoutes(r *gin.Engine) {
 	notesRepo := repository.NewNotesRepository(db)
 	financeRepo := repository.NewFinanceRepository(db)
 
+	// Initialize services
+	notesService := services.NewNotesService(notesRepo)
+	financeService := services.NewFinanceService(financeRepo)
+
 	// Initialize handlers
 	healthHandler := NewHealthHandler()
-	notesHandler := NewNotesHandler(notesRepo)
-	financeHandler := NewFinanceHandler(financeRepo)
+	notesHandler := NewNotesHandler(notesService)
+	financeHandler := NewFinanceHandler(financeService)
 
 	// Health check routes
-	api := r.Group("/api/v1")
+	api := r.Group("/api")
 	{
 		api.GET("/health", healthHandler.Health)
 		api.GET("/health/db", healthHandler.DatabaseHealth)
@@ -61,11 +66,6 @@ func SetupRoutes(r *gin.Engine) {
 		api.GET("/finance/goals/hierarchical", financeHandler.ListMainGoalsWithSubgoals)
 		api.POST("/finance/goals/expenses", financeHandler.CreateGoalExpense)
 		api.GET("/finance/goals/:id/expenses", financeHandler.ListGoalExpenses)
-
-		// Historical data and reporting endpoints
-		api.GET("/finance/historical", financeHandler.GetHistoricalData)
-		api.POST("/finance/historical/generate", financeHandler.GenerateHistoricalSummary)
-		api.POST("/finance/reports/pdf", financeHandler.GeneratePDFReport)
 	}
 
 	// Root health check
