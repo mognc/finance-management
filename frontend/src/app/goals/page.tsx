@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from 'react';
-import { financeApi } from '@/lib/api';
-import type { GoalCategory, GoalWithSubgoals } from '@/lib/api/finance';
+import { goalsApi } from '@/lib/api';
+import type { GoalCategory, GoalWithSubgoals, GoalPayload } from '@/lib/api';
 import { showError, showSuccess } from '@/lib/utils/notifications';
 import MainLayout from '@/components/layout/MainLayout';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, Legend } from 'recharts';
@@ -79,23 +79,32 @@ export default function GoalsPage() {
 
   // Editing table for goals
   const saveGoal = async (g: any) => {
-    await financeApi.updateGoal(g.Goal.id, { name: g.Goal.name, target_amount: g.Goal.target_amount, target_date: g.Goal.target_date ? `${g.Goal.target_date.slice(0,10)}T00:00:00Z` : undefined });
+    const updates: Partial<GoalPayload> = {
+      name: g.Goal.name,
+      target_amount: g.Goal.target_amount,
+    };
+    
+    if (g.Goal.target_date) {
+      updates.target_date = `${g.Goal.target_date.slice(0, 10)}T00:00:00Z`;
+    }
+    
+    await goalsApi.updateGoal(g.Goal.id, updates);
     await loadGoals();
     setEditingGoal(null);
   };
 
   const loadGoals = async () => {
-    const res = await financeApi.listGoals();
+    const res = await goalsApi.listGoals();
     if (res.success && Array.isArray(res.data)) setGoals(res.data as any);
   };
 
   const loadHierarchicalGoals = async () => {
-    const res = await financeApi.listMainGoalsWithSubgoals();
+    const res = await goalsApi.listMainGoalsWithSubgoals();
     if (res.success && Array.isArray(res.data)) setHierarchicalGoals(res.data as any);
   };
 
   const loadGoalCategories = async () => {
-    const res = await financeApi.listGoalCategories();
+    const res = await goalsApi.listGoalCategories();
     if (res.success && Array.isArray(res.data)) setGoalCategories(res.data as any);
   };
 
@@ -228,7 +237,7 @@ export default function GoalsPage() {
     };
     if (targetDate) payload.target_date = `${targetDate}T00:00:00Z`;
     if (parentGoalId && !isMainGoal) payload.parent_goal_id = parentGoalId;
-    const res = await financeApi.createGoal(payload);
+    const res = await goalsApi.createGoal(payload);
     if (res.success) {
       setName(''); setDescription(''); setCategory(''); setTargetAmount(''); setTargetDate('');
       setParentGoalId(''); setIsMainGoal(true);
@@ -252,7 +261,7 @@ export default function GoalsPage() {
       return;
     }
     const payload = { goal_id: contribGoalId, amount: amt, contributed_at: `${contribDate}T00:00:00Z` };
-    const res = await financeApi.contributeToGoal(payload);
+    const res = await goalsApi.contributeToGoal(payload);
     if (res.success) {
       setContribAmount('');
       setShowContributeForm(false);
@@ -266,7 +275,7 @@ export default function GoalsPage() {
 
   const handleDeleteGoal = async (goalId: string) => {
     setDeletingGoal(goalId);
-    const res = await financeApi.deleteGoal(goalId);
+    const res = await goalsApi.deleteGoal(goalId);
     if (res.success) {
       setShowDeleteConfirm(null);
       showSuccess('Goal deleted successfully');
