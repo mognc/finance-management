@@ -110,9 +110,3 @@ export const showSuccess = (title: string, message?: string) =>
 
 export const showError = (title: string, message?: string) => 
   notificationManager.error(title, message);
-
-export const showWarning = (title: string, message?: string) => 
-  notificationManager.warning(title, message);
-
-export const showInfo = (title: string, message?: string) => 
-  notificationManager.info(title, message);

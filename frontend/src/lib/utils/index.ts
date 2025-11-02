@@ -13,6 +13,3 @@ export * from './navigation';
 
 // Date utilities
 export * from './date';
-
-// Storage utilities
-export * from './storage';

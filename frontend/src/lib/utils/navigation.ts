@@ -74,30 +74,3 @@ export function generateBreadcrumbs(pathname: string, homeLabel: string = 'Dashb
 
   return breadcrumbs;
 }
-
-/**
- * Check if a path is active
- */
-export function isActivePath(currentPath: string, targetPath: string): boolean {
-  if (targetPath === '/') {
-    return currentPath === '/';
-  }
-  return currentPath.startsWith(targetPath);
-}
-
-/**
- * Get navigation item by href
- */
-export function getNavigationItem(href: string): NavigationItem | undefined {
-  return NAVIGATION_ITEMS.find(item => item.href === href);
-}
-
-/**
- * Get all navigation items with active state
- */
-export function getNavigationItemsWithActiveState(currentPath: string): NavigationItem[] {
-  return NAVIGATION_ITEMS.map(item => ({
-    ...item,
-    current: isActivePath(currentPath, item.href),
-  }));
-}

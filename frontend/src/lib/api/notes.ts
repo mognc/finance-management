@@ -57,40 +57,5 @@ export const notesApi = {
   // Archive/unarchive note
   async toggleArchive(id: string, isArchived: boolean): Promise<ApiResponse<Note>> {
     return this.updateNote(id, { is_archived: isArchived });
-  },
-
-  // Get notes by category
-  async getNotesByCategory(category: string): Promise<ApiResponse<Note[]>> {
-    return this.getNotes({ category });
-  },
-
-  // Get favorite notes
-  async getFavoriteNotes(): Promise<ApiResponse<Note[]>> {
-    // Note: This would need backend support for filtering by is_favorite
-    // For now, we'll get all notes and filter on frontend
-    const response = await this.getNotes();
-    if (response.success && response.data) {
-      const favoriteNotes = response.data.filter(note => note.is_favorite);
-      return {
-        data: favoriteNotes,
-        success: true,
-      };
-    }
-    return response;
-  },
-
-  // Get archived notes
-  async getArchivedNotes(): Promise<ApiResponse<Note[]>> {
-    // Note: This would need backend support for filtering by is_archived
-    // For now, we'll get all notes and filter on frontend
-    const response = await this.getNotes();
-    if (response.success && response.data) {
-      const archivedNotes = response.data.filter(note => note.is_archived);
-      return {
-        data: archivedNotes,
-        success: true,
-      };
-    }
-    return response;
-  },
+  }
 };
