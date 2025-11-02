@@ -83,12 +83,6 @@ export const classifyError = (error: ApiError | Error): ErrorInfo => {
   };
 };
 
-// User-friendly error messages
-export const getErrorMessage = (error: ApiError | Error): string => {
-  const errorInfo = classifyError(error);
-  return errorInfo.message;
-};
-
 // Error logging utility
 export const logError = (error: ApiError | Error, context?: string): void => {
   const errorInfo = classifyError(error);
@@ -102,33 +96,4 @@ export const logError = (error: ApiError | Error, context?: string): void => {
   
   // In production, you might want to send this to an error tracking service
   // like Sentry, LogRocket, etc.
-};
-
-// Retry utility for network errors
-export const withRetry = async <T>(
-  operation: () => Promise<T>,
-  maxRetries: number = 3,
-  delay: number = 1000
-): Promise<T> => {
-  let lastError: Error;
-  
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      return await operation();
-    } catch (error) {
-      lastError = error as Error;
-      
-      const errorInfo = classifyError(error as ApiError);
-      
-      // Only retry on network errors
-      if (errorInfo.type !== ErrorType.NETWORK || attempt === maxRetries) {
-        throw error;
-      }
-      
-      // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, delay * attempt));
-    }
-  }
-  
-  throw lastError!;
 };

@@ -61,3 +61,14 @@ export interface ApiResponse<T> {
   error?: ApiError;
   success: boolean;
 }
+
+// Component Props
+export interface NoteHeaderProps {
+  isEditing: boolean;
+  lastUpdated?: string;
+  hasChanges?: boolean;
+  isSaving?: boolean;
+  canSave?: boolean;
+  onSave?: () => void;
+  onDelete?: () => void;
+}

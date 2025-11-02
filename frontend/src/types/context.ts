@@ -24,8 +24,3 @@ export interface SidebarProviderProps {
   children: React.ReactNode;
   defaultOpen?: boolean;
 }
-
-// Generic Context Provider Props
-export interface ContextProviderProps {
-  children: React.ReactNode;
-}

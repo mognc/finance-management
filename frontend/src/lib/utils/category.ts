@@ -1,4 +1,3 @@
-import type { NoteCategory } from '@/types';
 
 /**
  * Note categories configuration
@@ -36,56 +35,4 @@ export function getCategoryColor(category: string): string {
     default:
       return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
   }
-}
-
-/**
- * Get category icon (you can extend this with actual icons)
- */
-export function getCategoryIcon(category: NoteCategory): string {
-  switch (category) {
-    case 'bullet-points':
-      return '•';
-    case 'plans':
-      return '📋';
-    case 'strategies':
-      return '🎯';
-    case 'wishlist':
-      return '⭐';
-    default:
-      return '📝';
-  }
-}
-
-/**
- * Get category description
- */
-export function getCategoryDescription(category: NoteCategory): string {
-  switch (category) {
-    case 'bullet-points':
-      return 'Quick notes and bullet points';
-    case 'plans':
-      return 'Plans and project outlines';
-    case 'strategies':
-      return 'Strategic thinking and analysis';
-    case 'wishlist':
-      return 'Things you want to buy or do';
-    default:
-      return 'General notes and thoughts';
-  }
-}
-
-/**
- * Validate if a category is valid
- */
-export function isValidCategory(category: string): category is NoteCategory {
-  return NOTE_CATEGORIES.some(cat => cat.id === category);
-}
-
-/**
- * Get all valid category IDs (excluding 'all')
- */
-export function getValidCategoryIds(): NoteCategory[] {
-  return NOTE_CATEGORIES
-    .filter(cat => cat.id !== 'all')
-    .map(cat => cat.id as NoteCategory);
 }

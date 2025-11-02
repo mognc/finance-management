@@ -3,7 +3,7 @@
 import { Bars3Icon } from '@heroicons/react/24/outline';
 import { useSidebar } from '@/contexts/SidebarContext';
 import Breadcrumbs from './Breadcrumbs';
-import toast from 'react-hot-toast';
+import { showError } from '@/lib/utils/notifications';
 
 interface HeaderProps {
   className?: string;
@@ -16,7 +16,7 @@ export default function Header({ className = '' }: HeaderProps) {
     try {
       toggleSidebar();
     } catch (error) {
-      toast.error('Unable to toggle sidebar. Please try again.');
+      showError('Unable to toggle sidebar', 'Please try again.');
     }
   };
 

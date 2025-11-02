@@ -19,11 +19,6 @@ class NotificationManager {
     };
   }
 
-  // Get current toasts
-  getToasts(): Toast[] {
-    return [...this.toasts];
-  }
-
   // Add a new toast
   addToast(toast: Omit<Toast, 'id'>): string {
     const id = Math.random().toString(36).substr(2, 9);
@@ -52,12 +47,6 @@ class NotificationManager {
     this.notifyListeners();
   }
 
-  // Clear all toasts
-  clearAll(): void {
-    this.toasts = [];
-    this.notifyListeners();
-  }
-
   // Notify all listeners
   private notifyListeners(): void {
     this.listeners.forEach(listener => listener(this.toasts));
@@ -82,23 +71,6 @@ class NotificationManager {
     });
   }
 
-  warning(title: string, message?: string, duration?: number): string {
-    return this.addToast({ 
-      type: 'warning', 
-      title, 
-      ...(message !== undefined && { message }), 
-      ...(duration !== undefined && { duration }) 
-    });
-  }
-
-  info(title: string, message?: string, duration?: number): string {
-    return this.addToast({ 
-      type: 'info', 
-      title, 
-      ...(message !== undefined && { message }), 
-      ...(duration !== undefined && { duration }) 
-    });
-  }
 }
 
 // Export singleton instance
@@ -110,9 +82,3 @@ export const showSuccess = (title: string, message?: string) =>
 
 export const showError = (title: string, message?: string) => 
   notificationManager.error(title, message);
-
-export const showWarning = (title: string, message?: string) => 
-  notificationManager.warning(title, message);
-
-export const showInfo = (title: string, message?: string) => 
-  notificationManager.info(title, message);

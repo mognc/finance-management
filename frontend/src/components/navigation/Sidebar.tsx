@@ -2,20 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  HomeIcon,
-  CogIcon,
-  UserIcon,
-  DocumentTextIcon
-} from '@heroicons/react/24/outline';
+import { UserIcon } from '@heroicons/react/24/outline';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { cn } from '@/lib/utils';
-
-interface NavigationItem {
-  name: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-}
+import { getNavigationItems } from '@/lib/config/routes';
 
 interface SidebarProps {
   className?: string;
@@ -24,14 +14,6 @@ interface SidebarProps {
     email: string;
   };
 }
-
-const navigation: NavigationItem[] = [
-  { name: 'Dashboard', href: '/', icon: HomeIcon },
-  { name: 'Notes', href: '/notes', icon: DocumentTextIcon },
-  { name: 'Finance', href: '/finance', icon: DocumentTextIcon },
-  { name: 'Goals', href: '/goals', icon: DocumentTextIcon },
-  { name: 'Settings', href: '/settings', icon: CogIcon }
-];
 
 export default function Sidebar({ 
   className = '', 
@@ -63,8 +45,11 @@ export default function Sidebar({
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-6 space-y-2" role="navigation" aria-label="Main menu">
-          {navigation.map((item) => {
+          {getNavigationItems().map((item) => {
             const isActive = pathname === item.href;
+            
+            if (!item.icon) return null;
+            
             const IconComponent = item.icon;
             
             return (

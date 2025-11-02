@@ -37,15 +37,15 @@ const ToastComponent = ({ toast }: { toast: Toast }) => {
   const getBackgroundColor = () => {
     switch (toast.type) {
       case 'success':
-        return 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800';
+        return 'bg-green-50 border-green-300 dark:bg-green-900/30 dark:border-green-700';
       case 'error':
-        return 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800';
+        return 'bg-red-50 border-red-300 dark:bg-red-900/30 dark:border-red-700';
       case 'warning':
-        return 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800';
+        return 'bg-yellow-50 border-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-700';
       case 'info':
-        return 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800';
+        return 'bg-blue-50 border-blue-300 dark:bg-blue-900/30 dark:border-blue-700';
       default:
-        return 'bg-gray-50 border-gray-200 dark:bg-gray-900/20 dark:border-gray-800';
+        return 'bg-gray-50 border-gray-300 dark:bg-gray-900/30 dark:border-gray-700';
     }
   };
 
@@ -56,28 +56,28 @@ const ToastComponent = ({ toast }: { toast: Toast }) => {
       }`}
     >
       <div
-        className={`max-w-sm w-full ${getBackgroundColor()} border rounded-lg shadow-lg p-4`}
+        className={`min-w-[320px] max-w-md ${getBackgroundColor()} border rounded-lg shadow-xl p-4 backdrop-blur-sm`}
       >
-        <div className="flex items-start">
-          <div className="flex-shrink-0">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 mt-0.5">
             {getIcon()}
           </div>
-          <div className="ml-3 w-0 flex-1">
-            <p className="text-sm font-medium text-gray-900 dark:text-white">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white break-words">
               {toast.title}
             </p>
             {toast.message && (
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300 break-words">
                 {toast.message}
               </p>
             )}
           </div>
-          <div className="ml-4 flex-shrink-0 flex">
+          <div className="flex-shrink-0 ml-2">
             <button
-              className="bg-white dark:bg-gray-800 rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="rounded-full p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
               onClick={handleClose}
+              aria-label="Close notification"
             >
-              <span className="sr-only">Close</span>
               <XMarkIcon className="h-5 w-5" />
             </button>
           </div>
@@ -98,9 +98,11 @@ export default function ToastContainer() {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
+    <div className="fixed top-4 right-4 z-[9999] space-y-3 pointer-events-none">
       {toasts.map((toast) => (
-        <ToastComponent key={toast.id} toast={toast} />
+        <div key={toast.id} className="pointer-events-auto">
+          <ToastComponent toast={toast} />
+        </div>
       ))}
     </div>
   );
