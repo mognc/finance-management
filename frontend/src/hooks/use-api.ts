@@ -6,8 +6,6 @@ import { showError, showSuccess } from '@/lib/utils/notifications';
 interface UseApiState<T> {
   data: T | null;
   loading: boolean;
-  error: ApiError | null;
-  success: boolean;
 }
 
 interface UseApiOptions {
@@ -30,12 +28,10 @@ export function useApi<T>(
   const [state, setState] = useState<UseApiState<T>>({
     data: null,
     loading: false,
-    error: null,
-    success: false,
   });
 
   const execute = useCallback(async (apiCall: () => Promise<ApiResponse<T>>) => {
-    setState(prev => ({ ...prev, loading: true, error: null, success: false }));
+    setState(prev => ({ ...prev, loading: true }));
 
     try {
       const response = await apiCall();
@@ -44,8 +40,6 @@ export function useApi<T>(
         setState({
           data: response.data,
           loading: false,
-          error: null,
-          success: true,
         });
 
         if (showSuccessMessage) {
@@ -56,8 +50,6 @@ export function useApi<T>(
         setState({
           data: null,
           loading: false,
-          error,
-          success: false,
         });
 
         if (showErrorMessage) {
@@ -74,8 +66,6 @@ export function useApi<T>(
       setState({
         data: null,
         loading: false,
-        error: apiError,
-        success: false,
       });
 
       if (showErrorMessage) {
@@ -89,35 +79,8 @@ export function useApi<T>(
     }
   }, [showSuccessMessage, successMessage, showErrorMessage, logErrors]);
 
-  const reset = useCallback(() => {
-    setState({
-      data: null,
-      loading: false,
-      error: null,
-      success: false,
-    });
-  }, []);
-
   return {
     ...state,
-    execute,
-    reset,
-  };
-}
-
-// Specialized hook for notes operations
-export function useNotesApi() {
-  const getNotes = useApi();
-  const getNote = useApi();
-  const createNote = useApi({ successMessage: 'Note created successfully' });
-  const updateNote = useApi({ successMessage: 'Note updated successfully' });
-  const deleteNote = useApi({ successMessage: 'Note deleted successfully' });
-
-  return {
-    getNotes,
-    getNote,
-    createNote,
-    updateNote,
-    deleteNote,
+    execute
   };
 }
